@@ -1,0 +1,13 @@
+// src/main/tsconfig.json
+// TypeScript configuration for the main process of the Electron application
+
+{
+	"compilerOptions": {
+		"types": ["../../types"],
+		"strict": true,
+		"target": "ESNext",
+		"module": "NodeNext",
+		"outDir": "../../dist-electron",
+		"skipLibCheck": true
+	}
+}

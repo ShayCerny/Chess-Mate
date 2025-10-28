@@ -1,0 +1,98 @@
+:root {
+    background-color: rgb(49, 49, 49);
+    color: white;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+
+    p,
+    a {
+        font-size: 24px;
+    }
+
+    h1 {
+        font-size: 40px;
+    }
+
+    h2 {
+        font-size: 30px;
+    }
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.app {
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    .icons{
+        width: 100%;
+        display: flex;
+        justify-content: space-evenly;
+    
+        svg{
+            width: 100px;
+            height: 100px;
+            fill: white;
+            cursor: pointer;
+        }
+
+        #react-icon:hover{
+            svg{
+                animation: spin-grow 3s linear infinite;
+            }
+        }
+
+        #electron-icon:hover{
+            svg{
+                animation: spin-grow 3s linear infinite;
+            }
+        }
+
+        #vite-icon:hover{
+            svg{
+                animation: vite-bob 3s linear infinite;
+            }
+        }
+
+    }
+
+    h1{
+        text-align: center;
+    }
+}
+
+@keyframes spin-grow {
+    0% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(180deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes vite-bob {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}

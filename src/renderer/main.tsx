@@ -1,0 +1,11 @@
+// src/renderer/main.tsx
+// Entry point for the React application in the renderer process
+import { StrictMode } from 'react';
+import {createRoot} from 'react-dom/client';
+import App from './App';
+
+createRoot(document.querySelector('.root')!).render(
+    <StrictMode>
+        <App/>
+    </StrictMode>
+)

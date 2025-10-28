@@ -1,0 +1,10 @@
+// tsconfig.json
+// Root TypeScript configuration file referencing application and Node.js configurations
+
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}
