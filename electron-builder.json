@@ -1,10 +1,10 @@
 {
-	"appId": "com.f-last.your-app-name",
+	"appId": "com.s-cerny.chess-mate",
 	"files": ["dist-electron", "dist-react"],
 	"extraResources": ["dist-electron/preload.cjs"],
-	"productName": "your app name",
+	"productName": "Chess Mate",
 	"icon": "./React.png",
-	"artifactName": "your app name.${ext}",
+	"artifactName": "Chess Mate.${ext}",
 	"mac": {
 		"target": "dmg"
 	},

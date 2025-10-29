@@ -7,15 +7,17 @@ import path from "path";
 // Create the main application window when Electron is ready
 app.on("ready", () => {
 	const mainWindow = new BrowserWindow({
-		width: 800,
-		height: 600,
-		title: "your-app-name",
+		width: 1200,
+		height: 800,
+		title: "Chess Engine",
 		webPreferences: {
 			contextIsolation: true,
 			nodeIntegration: false,
 			preload: path.join(app.getAppPath(), process.env.NODE_ENV === "development" ? "." : "..", "/dist-electron/preload.cjs"),
 		},
 	});
+
+	mainWindow.removeMenu();
 
 	// Load the appropriate URL or file based on the environment
 	if (process.env.NODE_ENV === "development") {

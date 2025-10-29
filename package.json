@@ -1,7 +1,7 @@
 {
-	"name": "your-app-name",
+	"name": "chess-mate",
 	"version": "1.0.0",
-	"description": "",
+	"description": "Simple Chess Game built with Electron and React",
 	"main": "dist-electron/main.js",
 	"scripts": {
 		"dev": "npm-run-all --parallel dev:react dev:electron",

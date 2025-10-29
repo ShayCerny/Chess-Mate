@@ -1,0 +1,21 @@
+.board{
+    width: calc(100vh - 20px);
+    height: calc(100vh - 20px);
+    margin: 10px;
+    display: grid;
+    grid-template-columns: repeat(8, calc((100vh - 20px) / 8));
+    grid-template-rows: repeat(8, calc((100vh - 20px) / 8));
+    
+    .square{
+        width: calc((100vh - 20px) / 8);
+        height: calc((100vh - 20px) / 8);
+    }
+
+    .light{
+        background-color: #f0d9b5;
+    }
+    .dark{
+        background-color: #b58863;
+    }
+
+}
