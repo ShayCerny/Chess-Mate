@@ -23,7 +23,7 @@ app.on("ready", () => {
 	if (process.env.NODE_ENV === "development") {
 		mainWindow.loadURL("http://localhost:5123");
 		// Uncomment to open DevTools on startup
-		// mainWindow.webContents.openDevTools({ mode:"detach"});
+		mainWindow.webContents.openDevTools({ mode:"detach"});
 	} else {
 		mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
 	}
