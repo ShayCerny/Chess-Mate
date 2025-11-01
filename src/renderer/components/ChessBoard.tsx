@@ -1,48 +1,32 @@
-import { useState } from 'react';
-import '../styles/chess.scss';
-import Piece from './Piece';
+// Get Starting Board State(FEN)
 
+import Piece from "./Piece";
 
-interface Pos{
-    file: string;
-    rank: number;
-}
+// Get Moves (pos)
 
-const getBoard = (selectedPos: Pos|null, handleSetSelectedSpace:(f:string,r:number)=>void)=>{
-    const board = [];
-    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
-    
-    for (const rank of ranks) {
-        for (const file of files) {
-            let squareColor = (files.indexOf(file) + ranks.indexOf(rank)) % 2 === 0 ? 'light' : 'dark';
-            
-            if (selectedPos && selectedPos.file === file && selectedPos.rank === rank) squareColor += ' selected';
-            
-            board.push(
-                <div key={`${file}${rank}`} className={`square ${squareColor}`} onClick={()=>{handleSetSelectedSpace(file, rank)}} >
-                    <Piece type="pawn" color="w"/>
-                    <div className="space-code"><p>{file}{rank}</p></div>
-                </div>
-            );
-        }
-    }
-    
-    return board;
-}
+// Move Piece(from, to, special?)
+const files = ["a","b","c","d","e","f","g","h"];
 
 export const ChessBoard = () => {
-    // const [board, setBoard] = useState([])
-    const [selectedSpace, setSelectedSpace] = useState(null as Pos|null);
-    
-    function handleSetSelectedSpace(f:string, r:number){
-        const pos:Pos = {file:f, rank:r};
-        setSelectedSpace(pos);
-    }
-    
-    return (
-        <div className="board">
-            {getBoard(selectedSpace, handleSetSelectedSpace)}
-        </div>
-    )
-}
+	const emptyBoard: IPiece[] = Array(64).fill({ type: "", color: "" });
+	return (
+		<div className="board">
+			{emptyBoard.map((p, index) => {
+                const row = Math.floor(index / 8);
+                const col = index % 8;
+                const isLight = (row + col) % 2 === 0;
+                const file = files[col]
+                const rank = 8 - row;
+                const spaceCode = `${file}${rank}`
+				return (
+					<div className={`square ${isLight ? "light" : "dark"}`} key={index}>
+						<div className="space-code">
+							<p>{spaceCode}</p>
+						</div>
+						{p.type !== "" ? <Piece type={p.type} color={p.type} /> : null}
+					</div>
+				);
+			})}
+		</div>
+	);
+};

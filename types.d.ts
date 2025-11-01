@@ -8,3 +8,13 @@ declare const APP_VERSION: string;
 interface Window {
   myCustomProperty: string;
 }
+
+interface IPiece {
+	type: string;
+	color: string;
+}
+
+interface ITurnMove{
+    white: string;
+    black: string;
+}

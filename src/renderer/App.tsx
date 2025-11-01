@@ -2,9 +2,8 @@
 // import ViteIcon from "../assets/Vite.js.svg?react";
 // import ElectronIcon from "../assets/electron.svg?react";
 
+import { GameManager } from "./components/GameManager";
 import "./styles/app.scss";
-import { ChessBoard } from "./components/ChessBoard";
-
 function App() {
 	return (
 		// <div className="app">
@@ -21,8 +20,8 @@ function App() {
 		// 	</div>
 		// 	<h1>Click the icons to learn more</h1>
 		// </div>
-
-		<ChessBoard/>
+		
+		<GameManager/>
 
 	);
 }
