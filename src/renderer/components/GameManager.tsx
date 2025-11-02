@@ -16,8 +16,7 @@ import Piece from "./Piece";
 // offerDraw()
 
 export const GameManager = () => {
-	const moveList = [
-	] as ITurnMove[];
+	const moveList = [] as ITurnMove[];
 	const whiteAdvantage = 0.5; // when a move is done it should calculate a new position evaluation and return whiteAdvantage
 	const height = `${whiteAdvantage * 100}%`;
 	return (
@@ -53,12 +52,28 @@ export const GameManager = () => {
 						</tbody>
 					</table>
 					<div className="controls">
-						<button className="control-btn export">Export FEN</button>
-						<button className="control-btn undo">Undo</button>
-						<button className="control-btn redo">Redo</button>
-						<button className="control-btn hint">Get Hint</button>
-						<button className="control-btn resign">Resign</button>
-						<button className="control-btn draw">Offer Draw</button>
+						<div className="group">
+							<h3 className="group-title">Game Controls</h3>
+							<button className="control-btn export">Export FEN</button>
+							<div className="row">
+								<button className="control-btn undo">Undo</button>
+								<button className="control-btn redo">Redo</button>
+							</div>
+						</div>
+						<hr />
+						<div className="group">
+							<h3 className="group-title">Assistance</h3>
+							<div className="row">
+								<button className="control-btn hint">Get Hint</button>
+								<button className="control-btn">Settings</button>
+							</div>
+						</div>
+						<hr />
+						<div className="group">
+							<h3 className="group-title">Game Options</h3>
+							<button className="control-btn resign">Resign</button>
+							<button className="control-btn draw">Offer Draw</button>
+						</div>
 					</div>
 				</div>
 			</div>
