@@ -15,13 +15,21 @@ import Piece from "./Piece";
 
 // offerDraw()
 
+const emptyBoard = Array(64).fill({ type: "", color: "" });
+
 export const GameManager = () => {
-	const moveList = [] as ITurnMove[];
+	const board = [...emptyBoard];
+	board[1] = {type:"pawn", color:"b"};
+	board[1+9] = {type:"pawn", color:"w"}
+
+	const highlight = null;
+	const moves = [{square:1+9,type:1}, {square:9, type:0}] as IMove[];
+	const pastMoveList = [] as ITurnMove[];
 	const whiteAdvantage = 0.5; // when a move is done it should calculate a new position evaluation and return whiteAdvantage
 	const height = `${whiteAdvantage * 100}%`;
 	return (
 		<div className="game">
-			<ChessBoard />
+			<ChessBoard board={board} highlight={highlight} moves={moves} />
 			<div className="info">
 				<div className="points">
 					<div className="inner" style={{ height }}></div>
@@ -39,7 +47,7 @@ export const GameManager = () => {
 							</tr>
 						</thead>
 						<tbody>
-							{moveList.map((item, index) => (
+							{pastMoveList.map((item, index) => (
 								<tr key={index}>
 									<td>
 										<p>{item.white}</p>
