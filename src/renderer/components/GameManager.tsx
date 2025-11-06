@@ -1,7 +1,11 @@
 import { ChessBoard } from "./ChessBoard";
 
 import "../styles/chess.scss";
-import Piece from "./Piece";
+import { useEffect, useState } from "react";
+import { Board } from "./BoardClass";
+import { FenDecoder } from "./utils";
+import { PastMoveTable } from "./PastMoveTable";
+import { IFullTurnMove, PieceColor, PieceType } from "../types";
 
 // exportFEN(board)
 
@@ -15,50 +19,84 @@ import Piece from "./Piece";
 
 // offerDraw()
 
-const emptyBoard = Array(64).fill({ type: "", color: "" });
+interface IGameProps {
+	fen: string;
+}
 
-export const GameManager = () => {
-	const board = [...emptyBoard];
-	board[1] = {type:"pawn", color:"b"};
-	board[1+9] = {type:"pawn", color:"w"}
+export const GameManager = ({ fen }: IGameProps) => {
+	const [board, setBoard] = useState(new Board([], PieceColor.WHITE, "", "", 1, 0));
+	const [selectedSquare, setSelectedSquare] = useState(null as null | number);
+	const [enPassantSquare, setEnPassantSqaure] = useState(null as null | number);
 
-	const highlight = null;
-	const moves = [{square:1+9,type:1}, {square:9, type:0}] as IMove[];
-	const pastMoveList = [] as ITurnMove[];
+	const [moves, setMoves] = useState([] as number[]);
+	const [pastMoves, setPastMoves] = useState([] as IFullTurnMove[]);
+
 	const whiteAdvantage = 0.5; // when a move is done it should calculate a new position evaluation and return whiteAdvantage
 	const height = `${whiteAdvantage * 100}%`;
+
+	useEffect(() => {
+		const loadFen = () => {
+			setBoard(FenDecoder(fen));
+		};
+
+		loadFen();
+	}, [fen]);
+
+	const handleGetMoves = async (index: number) => {
+		// TODO get the moves from C++ Node Addon
+		setMoves([index - 8, index - 16]); 
+	};
+
+	const handleSelect = (index: number) => {
+		if (board.atPos(index).color === board.colorTurn && selectedSquare === null) {
+			// If its the selected colors turn and there is no piece selected
+			setSelectedSquare(index);
+			handleGetMoves(index);
+		} else if (board.atPos(index).color === board.colorTurn && selectedSquare !== index) {
+			// If its the selected colors turn and the selected piece is not the currently selected
+			setSelectedSquare(index);
+			handleGetMoves(index);
+		} else {
+			// otherwise deselect
+			setSelectedSquare(null);
+		}
+	};
+
+	const handleMove = (index: number) => {
+		let enPassant = false;
+
+		if (selectedSquare === null) return; // if no piece is selected
+
+		if (index === enPassantSquare) enPassant = true; // if the selected move is the enPassant available then this is an enPassant move
+
+		const piece = board.atPos(selectedSquare);
+		if (piece.type === PieceType.PAWN && Math.abs(selectedSquare - index) > 8) {
+			// get the direction
+			const direction = piece.color === "w" ? 8 : -8;
+
+			setEnPassantSqaure(selectedSquare + direction);
+		}
+
+		const attacked = board.move(selectedSquare, index, enPassant);
+		setSelectedSquare(null); // reset the selected square
+		setMoves([] as number[]);
+		setPastMoves([]);
+
+		board.swapTurn();
+		console.log(board.colorTurn);
+
+		console.log(attacked);
+	};
+
 	return (
 		<div className="game">
-			<ChessBoard board={board} highlight={highlight} moves={moves} />
+			<ChessBoard board={board.squares} highlight={selectedSquare} moves={moves} handleSelect={handleSelect} handleMove={handleMove} />
 			<div className="info">
 				<div className="points">
 					<div className="inner" style={{ height }}></div>
 				</div>
 				<div>
-					<table id="move-tree">
-						<thead>
-							<tr>
-								<th>
-									<Piece type="king" color="w" />
-								</th>
-								<th>
-									<Piece type="king" color="b" />
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{pastMoveList.map((item, index) => (
-								<tr key={index}>
-									<td>
-										<p>{item.white}</p>
-									</td>
-									<td>
-										<p>{item.black}</p>
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
+					<PastMoveTable pastMoves={pastMoves} />
 					<div className="controls">
 						<div className="group">
 							<h3 className="group-title">Game Controls</h3>

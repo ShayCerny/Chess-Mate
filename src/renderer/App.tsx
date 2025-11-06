@@ -4,6 +4,9 @@
 
 import { GameManager } from "./components/GameManager";
 import "./styles/app.scss";
+
+const standardFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 function App() {
 	return (
 		// <div className="app">
@@ -20,9 +23,8 @@ function App() {
 		// 	</div>
 		// 	<h1>Click the icons to learn more</h1>
 		// </div>
-		
-		<GameManager/>
 
+		<GameManager fen={standardFen} />
 	);
 }
 
