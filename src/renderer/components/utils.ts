@@ -35,6 +35,14 @@ function ParsePiece(p: string) {
 	return { type, color } as IPiece;
 }
 
+const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
+
+export function indexToAlgebraic(index: number): string {
+	const col = index % 8;
+	const rank = 8 - Math.floor(index / 8);
+	return `${FILES[col]}${rank}`;
+}
+
 export function FenDecoder(s: string) {
 	// split string by ' '
 	const parts = s.split(" ");
@@ -71,7 +79,7 @@ export function FenDecoder(s: string) {
 }
 
 export function FenEncoder(board: Board) {
-	const fen = "";
+	let fen = "";
 
 	let skipCounter = 0;
 
@@ -79,22 +87,26 @@ export function FenEncoder(board: Board) {
 		for (let file = 0; file < 8; file++) {
 			const piece = board.squares[file + rank * 8];
 
-			if (piece.type == PieceType.NONE) skipCounter++; // if space is empty increase the space skip counter by 1
+			if (piece.type == PieceType.NONE) skipCounter++;
 			else {
 				if (skipCounter > 0) {
-					fen.concat(skipCounter.toString());
+					fen += skipCounter.toString();
 					skipCounter = 0;
 				}
 
 				const firstChar = piece.type;
 				const fenChar = piece.color === PieceColor.WHITE ? firstChar.toUpperCase() : firstChar.toLowerCase();
 
-				fen.concat(fenChar);
+				fen += fenChar;
 			}
 		}
-		fen.concat("/");
+		if (skipCounter > 0) {
+			fen += skipCounter.toString();
+			skipCounter = 0;
+		}
+		if (rank < 7) fen += "/";
 	}
 
-	fen.concat(` ${board.colorTurn} ${board.castles} ${board.enPassant} ${board.fullTurn.toString()} ${board.halfTurn.toString()}`);
+	fen += ` ${board.colorTurn} ${board.castles} ${board.enPassant} ${board.fullTurn.toString()} ${board.halfTurn.toString()}`;
 	return fen;
 }

@@ -38,7 +38,7 @@ export const ChessBoard = ({ board, highlight, moves, handleSelect, handleMove }
 				return (
 					<div className={`square ${isLight ? "light" : "dark"} ${index == highlight ? "selected" : null} ${hasPiece ? "piece" : null}`} key={index} onClick={() => handleSelect(index)}>
 						{isMove && (
-							<div className="move" onClick={() => handleMove(index, false)}>
+							<div className="move" onClick={() => handleMove(index)}>
 								{board[index].type === "" ? <NormalMove /> : <AttackMove />}
 							</div>
 						)}

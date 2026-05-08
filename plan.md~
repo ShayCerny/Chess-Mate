@@ -1,0 +1,8 @@
+*Plan*
+
+1. Look through existing code and detect issues, logging them.
+
+2. Ensure proper data handling and best practices are being followed.
+
+3. Implement proper data flow utilizing a To-Be-Implemented custom Node addon, this will be the computer/movesearching algorithm.
+

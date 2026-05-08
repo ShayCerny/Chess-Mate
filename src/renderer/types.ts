@@ -21,7 +21,7 @@ export interface IPiece {
 
 export interface IFullTurnMove {
 	white: IHalfTurnMove;
-	black: IHalfTurnMove;
+	black: IHalfTurnMove | null;
 }
 
 export enum MoveType {
@@ -38,13 +38,17 @@ export interface IHalfTurnMove {
 	to: number;
 	type: MoveType;
 	piece: IPiece;
-	pieceTaken?: IPiece;
+	pieceTaken: IPiece | null;
+	castlesBefore: string;
+	enPassantBefore: string;
+	fullTurnBefore: number;
+	halfTurnBefore: number;
 }
 
 export interface IBoardProps {
 	board: IPiece[];
-	highlight: number | null; // index or space code of square that should be highlighted
-	moves: number[]; // Indices of spaces that should be displayed as moves
+	highlight: number | null;
+	moves: number[];
 	handleSelect: (index: number) => void;
-	handleMove: (index: number, enPassant: boolean) => void;
+	handleMove: (index: number) => void;
 }

@@ -1,10 +1,8 @@
-// types.d.ts
-// Global TypeScript declarations for the Electron application
-
-//Example: Declare a global variable for the application version
 declare const APP_VERSION: string;
 
-//Example: Extend the Window interface to include custom properties
 interface Window {
-	myCustomProperty: string;
+	electronAPI: {
+		getLegalMoves: (fen: string) => Promise<number[][]>;
+		getBestMove: (fen: string) => Promise<[number, number] | null>;
+	};
 }

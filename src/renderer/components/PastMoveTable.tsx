@@ -35,7 +35,7 @@ export const PastMoveTable = ({ pastMoves }: IPastMoveTableProps) => {
 
 		const isCapture = move.pieceTaken;
 
-		return <p>{`${symbol} ${isCapture && "x"}${spaceCode}`}</p>;
+		return <p>{`${symbol} ${isCapture ? "x" : ""}${spaceCode}`}</p>;
 	}
 
 	return (
@@ -54,7 +54,7 @@ export const PastMoveTable = ({ pastMoves }: IPastMoveTableProps) => {
 				{pastMoves.map((item, index) => (
 					<tr key={index}>
 						<td>{getNotation(item.white)}</td>
-						<td>{getNotation(item.black)}</td>
+						<td>{item.black && getNotation(item.black)}</td>
 					</tr>
 				))}
 			</tbody>

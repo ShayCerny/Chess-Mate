@@ -3,9 +3,9 @@ import { ChessBoard } from "./ChessBoard";
 import "../styles/chess.scss";
 import { useEffect, useState } from "react";
 import { Board } from "./BoardClass";
-import { FenDecoder } from "./utils";
+import { FenDecoder, FenEncoder, indexToAlgebraic } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
-import { IFullTurnMove, PieceColor, PieceType } from "../types";
+import { IFullTurnMove, IHalfTurnMove, PieceColor, PieceType } from "../types";
 
 // exportFEN(board)
 
@@ -43,8 +43,9 @@ export const GameManager = ({ fen }: IGameProps) => {
 	}, [fen]);
 
 	const handleGetMoves = async (index: number) => {
-		// TODO get the moves from C++ Node Addon
-		setMoves([index - 8, index - 16]); 
+		const fen = FenEncoder(board);
+		const allMoves: number[][] = await window.electronAPI.getLegalMoves(fen);
+		setMoves(allMoves.filter(pair => pair[0] === index).map(pair => pair[1]));
 	};
 
 	const handleSelect = (index: number) => {
@@ -63,34 +64,88 @@ export const GameManager = ({ fen }: IGameProps) => {
 	};
 
 	const handleMove = (index: number) => {
+		setEnPassantSqaure(null);
+
+		if (selectedSquare === null) return;
+
 		let enPassant = false;
-
-		if (selectedSquare === null) return; // if no piece is selected
-
-		if (index === enPassantSquare) enPassant = true; // if the selected move is the enPassant available then this is an enPassant move
+		if (
+			index === enPassantSquare &&
+			board.squares[selectedSquare].type == PieceType.PAWN &&
+			(selectedSquare == index + 9 ||
+				selectedSquare == index + 7 ||
+				selectedSquare == index - 7 ||
+				selectedSquare == index - 9)
+		)
+			enPassant = true;
 
 		const piece = board.atPos(selectedSquare);
-		if (piece.type === PieceType.PAWN && Math.abs(selectedSquare - index) > 8) {
-			// get the direction
+		if (piece.type === PieceType.PAWN && Math.abs(selectedSquare - index) === 16) {
 			const direction = piece.color === "w" ? 8 : -8;
-
-			setEnPassantSqaure(selectedSquare + direction);
+			const epIndex = selectedSquare + direction;
+			setEnPassantSqaure(epIndex);
+			board.enPassant = indexToAlgebraic(epIndex);
+		} else {
+			board.enPassant = "-";
 		}
 
-		const attacked = board.move(selectedSquare, index, enPassant);
-		setSelectedSquare(null); // reset the selected square
+		const snapshot = {
+			castlesBefore: board.castles,
+			enPassantBefore: board.enPassant,
+			fullTurnBefore: board.fullTurn,
+			halfTurnBefore: board.halfTurn,
+		};
+
+		const { attacked, movedPiece, moveType } = board.move(selectedSquare, index, enPassant);
+		setSelectedSquare(null);
 		setMoves([] as number[]);
-		setPastMoves([]);
+
+		const lastMove: IHalfTurnMove = {
+			from: selectedSquare,
+			to: index,
+			piece: movedPiece,
+			type: moveType,
+			pieceTaken: attacked ?? null,
+			...snapshot,
+		};
+
+		const tempPastMoves = [...pastMoves];
+		if (board.colorTurn === PieceColor.WHITE) {
+			tempPastMoves.push({ white: lastMove, black: null });
+		} else {
+			tempPastMoves[tempPastMoves.length - 1].black = lastMove;
+		}
+		setPastMoves(tempPastMoves);
 
 		board.swapTurn();
-		console.log(board.colorTurn);
+		setBoard(new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn));
+	};
 
-		console.log(attacked);
+	const handleUndo = () => {
+		if (pastMoves.length === 0) return;
+
+		const last = pastMoves[pastMoves.length - 1];
+		if (last.black !== null) {
+			board.undo(last.black);
+			const tempPastMoves = [...pastMoves];
+			tempPastMoves[tempPastMoves.length - 1] = { ...last, black: null };
+			setPastMoves(tempPastMoves);
+		} else {
+			board.undo(last.white);
+			setPastMoves(pastMoves.slice(0, -1));
+		}
+		setBoard(new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn));
 	};
 
 	return (
 		<div className="game">
-			<ChessBoard board={board.squares} highlight={selectedSquare} moves={moves} handleSelect={handleSelect} handleMove={handleMove} />
+			<ChessBoard
+				board={board.squares}
+				highlight={selectedSquare}
+				moves={moves}
+				handleSelect={handleSelect}
+				handleMove={handleMove}
+			/>
 			<div className="info">
 				<div className="points">
 					<div className="inner" style={{ height }}></div>
@@ -102,7 +157,9 @@ export const GameManager = ({ fen }: IGameProps) => {
 							<h3 className="group-title">Game Controls</h3>
 							<button className="control-btn export">Export FEN</button>
 							<div className="row">
-								<button className="control-btn undo">Undo</button>
+								<button className="control-btn undo" onClick={handleUndo}>
+									Undo
+								</button>
 								<button className="control-btn redo">Redo</button>
 							</div>
 						</div>
