@@ -5,7 +5,7 @@ import { ResignConfirmModal } from "./ResignConfirmModal";
 import "../styles/chess.scss";
 import { useEffect, useState } from "react";
 import { Board } from "./BoardClass";
-import { FenDecoder, FenEncoder, GameStatus, indexToAlgebraic, resolveClickAction, resolveGameResult, resolveGameStatus, turnLabel } from "./utils";
+import { FenDecoder, FenEncoder, indexToAlgebraic, resolveClickAction, resolveGameResult, resolveGameStatus } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
 import { GameResult, IFullTurnMove, IHalfTurnMove, MoveType, PieceColor, PieceType } from "../types";
 
@@ -33,8 +33,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 	const [moves, setMoves] = useState([] as number[]);
 	const [pastMoves, setPastMoves] = useState([] as IFullTurnMove[]);
 	const [futureMoves, setFutureMoves] = useState([] as IHalfTurnMove[]);
-	const [gameStatus, setGameStatus] = useState<GameStatus>("playing");
-	const [checkSquare, setCheckSquare] = useState<number | null>(null);
+const [checkSquare, setCheckSquare] = useState<number | null>(null);
 	const [gameResult, setGameResult] = useState<GameResult | null>(null);
 	const [modalVisible, setModalVisible] = useState(false);
 	const [resignConfirmVisible, setResignConfirmVisible] = useState(false);
@@ -57,7 +56,6 @@ export const GameManager = ({ fen }: IGameProps) => {
 			window.electronAPI.isInCheck(fen),
 		]);
 		const status = resolveGameStatus(allMoves.length, inCheck);
-		setGameStatus(status);
 		const result = resolveGameResult(status, updatedBoard.colorTurn);
 		setGameResult(result);
 		if (result !== null) setModalVisible(true);
@@ -157,7 +155,6 @@ export const GameManager = ({ fen }: IGameProps) => {
 		setMoves([]);
 		setPastMoves([]);
 		setFutureMoves([]);
-		setGameStatus("playing");
 		setGameResult(null);
 		setCheckSquare(null);
 		setModalVisible(false);
@@ -264,14 +261,6 @@ export const GameManager = ({ fen }: IGameProps) => {
 					<div className="inner" style={{ height }}></div>
 				</div>
 				<div>
-					<div className={`turn-indicator ${board.colorTurn === PieceColor.WHITE ? "white" : "black"}${gameStatus === "check" ? " in-check" : ""}`}>
-						<span className="turn-circle" />
-						<span className="turn-text">
-							{gameStatus === "check"
-								? `${board.colorTurn === PieceColor.WHITE ? "White" : "Black"} is in check`
-								: turnLabel(board.colorTurn)}
-						</span>
-					</div>
 					<PastMoveTable pastMoves={pastMoves} />
 					<div className="controls">
 						<div className="group">
