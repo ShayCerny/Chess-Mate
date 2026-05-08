@@ -50,25 +50,17 @@ export function FenDecoder(s: string) {
 	const squares = [] as IPiece[];
 
 	parts[0].split("/").map((rank: string) => {
-		for (let file = 0; file < rank.length; ) {
-			const char = rank.charAt(file); // get the characted in the current rank/file
-			const num = Number(char); // attempt to convert the character to a number
+		for (let i = 0; i < rank.length; i++) {
+			const char = rank.charAt(i);
+			const num = Number(char);
 
-			if (!isNaN(num) && isFinite(num)) {
-				// if num is a valid finite number
-				file += num;
-
-				// add the empty spaces to the board
-				for (let i = 1; i <= num; i++) {
+			if (!isNaN(num) && isFinite(num) && num !== 0) {
+				for (let j = 0; j < num; j++) {
 					squares.push({ type: PieceType.NONE, color: PieceColor.NONE } as IPiece);
 				}
-
-				continue;
 			} else {
-				squares.push(ParsePiece(rank.charAt(file))); // add the parsed piece to the board
+				squares.push(ParsePiece(char));
 			}
-
-			file++; // increment the file
 		}
 	});
 
