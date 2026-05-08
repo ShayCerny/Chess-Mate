@@ -1,4 +1,5 @@
 import { ChessBoard } from "./ChessBoard";
+import { GameEndModal } from "./GameEndModal";
 
 import "../styles/chess.scss";
 import { useEffect, useState } from "react";
@@ -33,6 +34,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 	const [gameStatus, setGameStatus] = useState<GameStatus>("playing");
 	const [checkSquare, setCheckSquare] = useState<number | null>(null);
 	const [gameResult, setGameResult] = useState<GameResult | null>(null);
+	const [modalVisible, setModalVisible] = useState(false);
 
 	const whiteAdvantage = 0.5; // when a move is done it should calculate a new position evaluation and return whiteAdvantage
 	const height = `${whiteAdvantage * 100}%`;
@@ -53,7 +55,9 @@ export const GameManager = ({ fen }: IGameProps) => {
 		]);
 		const status = resolveGameStatus(allMoves.length, inCheck);
 		setGameStatus(status);
-		setGameResult(resolveGameResult(status, updatedBoard.colorTurn));
+		const result = resolveGameResult(status, updatedBoard.colorTurn);
+		setGameResult(result);
+		if (result !== null) setModalVisible(true);
 		if (status === "check" || status === "checkmate") {
 			const kingIdx = updatedBoard.squares.findIndex(
 				s => s.type === PieceType.KING && s.color === updatedBoard.colorTurn
@@ -151,6 +155,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 		setGameStatus("playing");
 		setGameResult(null);
 		setCheckSquare(null);
+		setModalVisible(false);
 	};
 
 	const handleUndo = () => {
@@ -173,6 +178,13 @@ export const GameManager = ({ fen }: IGameProps) => {
 
 	return (
 		<div className="game">
+			{modalVisible && gameResult !== null && (
+				<GameEndModal
+					gameResult={gameResult}
+					onNewGame={handleNewGame}
+					onReview={() => setModalVisible(false)}
+				/>
+			)}
 			<ChessBoard
 				board={board.squares}
 				highlight={selectedSquare}

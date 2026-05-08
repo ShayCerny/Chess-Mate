@@ -288,3 +288,77 @@
 		}
 	}
 }
+
+.modal-overlay {
+	position: fixed;
+	inset: 0;
+	background-color: rgba(0, 0, 0, 0.75);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 100;
+
+	.modal {
+		background-color: #1e1e1e;
+		border: 1px solid #3a3a3a;
+		border-radius: 12px;
+		padding: 36px 40px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 28px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+		min-width: 320px;
+
+		.modal-headline {
+			margin: 0;
+			font-family: "Inter", sans-serif;
+			font-size: 22px;
+			font-weight: 700;
+			color: #f1f1f1;
+			text-align: center;
+		}
+
+		.modal-actions {
+			display: flex;
+			gap: 14px;
+
+			.modal-btn {
+				padding: 10px 24px;
+				border: none;
+				border-radius: 8px;
+				font-family: "Inter", sans-serif;
+				font-size: 14px;
+				font-weight: 600;
+				cursor: pointer;
+				transition: background-color 0.2s ease, transform 0.1s ease;
+
+				&:hover {
+					transform: translateY(-1px);
+				}
+
+				&:active {
+					transform: translateY(0);
+				}
+
+				&.new-game {
+					background-color: #2a7a4a;
+					color: #f1f1f1;
+
+					&:hover {
+						background-color: #3a9a5a;
+					}
+				}
+
+				&.review {
+					background-color: #3a3a3a;
+					color: #f1f1f1;
+
+					&:hover {
+						background-color: #505050;
+					}
+				}
+			}
+		}
+	}
+}
