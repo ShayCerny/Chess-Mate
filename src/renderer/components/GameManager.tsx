@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Board } from "./BoardClass";
 import { FenDecoder, FenEncoder, GameStatus, indexToAlgebraic, resolveClickAction, resolveGameResult, resolveGameStatus, turnLabel } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
-import { GameResult, IFullTurnMove, IHalfTurnMove, PieceColor, PieceType } from "../types";
+import { GameResult, IFullTurnMove, IHalfTurnMove, MoveType, PieceColor, PieceType } from "../types";
 
 // exportFEN(board)
 
@@ -31,6 +31,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 
 	const [moves, setMoves] = useState([] as number[]);
 	const [pastMoves, setPastMoves] = useState([] as IFullTurnMove[]);
+	const [futureMoves, setFutureMoves] = useState([] as IHalfTurnMove[]);
 	const [gameStatus, setGameStatus] = useState<GameStatus>("playing");
 	const [checkSquare, setCheckSquare] = useState<number | null>(null);
 	const [gameResult, setGameResult] = useState<GameResult | null>(null);
@@ -87,6 +88,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 
 	const handleMove = (index: number) => {
 		setEnPassantSqaure(null);
+		setFutureMoves([]);
 
 		if (selectedSquare === null) return;
 
@@ -152,6 +154,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 		setEnPassantSqaure(null);
 		setMoves([]);
 		setPastMoves([]);
+		setFutureMoves([]);
 		setGameStatus("playing");
 		setGameResult(null);
 		setCheckSquare(null);
@@ -162,15 +165,52 @@ export const GameManager = ({ fen }: IGameProps) => {
 		if (pastMoves.length === 0) return;
 
 		const last = pastMoves[pastMoves.length - 1];
+		let undoneMove: IHalfTurnMove;
 		if (last.black !== null) {
+			undoneMove = last.black;
 			board.undo(last.black);
 			const tempPastMoves = [...pastMoves];
 			tempPastMoves[tempPastMoves.length - 1] = { ...last, black: null };
 			setPastMoves(tempPastMoves);
 		} else {
+			undoneMove = last.white;
 			board.undo(last.white);
 			setPastMoves(pastMoves.slice(0, -1));
 		}
+		setFutureMoves([...futureMoves, undoneMove]);
+		const newBoard = new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn);
+		setBoard(newBoard);
+		refreshStatus(newBoard);
+	};
+
+	const handleRedo = () => {
+		if (futureMoves.length === 0) return;
+
+		const move = futureMoves[futureMoves.length - 1];
+		setFutureMoves(futureMoves.slice(0, -1));
+
+		const isEnPassant = move.type === MoveType.ENPASSANT;
+		board.move(move.from, move.to, isEnPassant);
+
+		if (move.piece.type === PieceType.PAWN && Math.abs(move.from - move.to) === 16) {
+			const direction = move.piece.color === PieceColor.WHITE ? 8 : -8;
+			const epIndex = move.from + direction;
+			setEnPassantSqaure(epIndex);
+			board.enPassant = indexToAlgebraic(epIndex);
+		} else {
+			setEnPassantSqaure(null);
+			board.enPassant = "-";
+		}
+
+		const tempPastMoves = [...pastMoves];
+		if (board.colorTurn === PieceColor.WHITE) {
+			tempPastMoves.push({ white: move, black: null });
+		} else {
+			tempPastMoves[tempPastMoves.length - 1].black = move;
+		}
+		setPastMoves(tempPastMoves);
+
+		board.swapTurn();
 		const newBoard = new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn);
 		setBoard(newBoard);
 		refreshStatus(newBoard);
@@ -214,10 +254,10 @@ export const GameManager = ({ fen }: IGameProps) => {
 							<h3 className="group-title">Game Controls</h3>
 							<button className="control-btn export">Export FEN</button>
 							<div className="row">
-								<button className="control-btn undo" onClick={handleUndo} disabled={gameResult !== null}>
+								<button className="control-btn undo" onClick={handleUndo} disabled={pastMoves.length === 0}>
 									Undo
 								</button>
-								<button className="control-btn redo" disabled={gameResult !== null}>Redo</button>
+								<button className="control-btn redo" onClick={handleRedo} disabled={futureMoves.length === 0}>Redo</button>
 							</div>
 							<button className="control-btn new-game" onClick={handleNewGame}>New Game</button>
 						</div>
