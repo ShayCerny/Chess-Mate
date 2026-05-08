@@ -26,7 +26,7 @@ ipcMain.handle("chess:get-legal-moves", (_event, fen: string) => {
 
 ipcMain.handle("chess:is-in-check", (_event, fen: string) => {
     const engine = loadChessEngine();
-    return engine ? engine.isInCheck(fen) : false;
+    return engine && typeof engine.isInCheck === 'function' ? engine.isInCheck(fen) : false;
 });
 
 ipcMain.on("app-close", () => {
