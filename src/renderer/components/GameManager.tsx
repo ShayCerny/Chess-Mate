@@ -3,7 +3,7 @@ import { ChessBoard } from "./ChessBoard";
 import "../styles/chess.scss";
 import { useEffect, useState } from "react";
 import { Board } from "./BoardClass";
-import { FenDecoder, FenEncoder, indexToAlgebraic } from "./utils";
+import { FenDecoder, FenEncoder, indexToAlgebraic, resolveClickAction } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
 import { IFullTurnMove, IHalfTurnMove, PieceColor, PieceType } from "../types";
 
@@ -49,17 +49,13 @@ export const GameManager = ({ fen }: IGameProps) => {
 	};
 
 	const handleSelect = (index: number) => {
-		if (board.atPos(index).color === board.colorTurn && selectedSquare === null) {
-			// If its the selected colors turn and there is no piece selected
-			setSelectedSquare(index);
-			handleGetMoves(index);
-		} else if (board.atPos(index).color === board.colorTurn && selectedSquare !== index) {
-			// If its the selected colors turn and the selected piece is not the currently selected
+		const action = resolveClickAction(board.atPos(index).color, board.colorTurn, selectedSquare, index);
+		if (action === "select" || action === "reselect") {
 			setSelectedSquare(index);
 			handleGetMoves(index);
 		} else {
-			// otherwise deselect
 			setSelectedSquare(null);
+			setMoves([] as number[]);
 		}
 	};
 

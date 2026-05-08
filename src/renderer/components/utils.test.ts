@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { indexToAlgebraic, FenDecoder, FenEncoder } from "./utils";
+import { indexToAlgebraic, FenDecoder, FenEncoder, resolveClickAction } from "./utils";
 import { PieceType, PieceColor } from "../types";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -57,6 +57,28 @@ describe("FenDecoder", () => {
 		const fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
 		const board = FenDecoder(fen);
 		expect(board.colorTurn).toBe(PieceColor.BLACK);
+	});
+});
+
+describe("resolveClickAction", () => {
+	it("selects a friendly piece when nothing is selected", () => {
+		expect(resolveClickAction(PieceColor.WHITE, PieceColor.WHITE, null, 12)).toBe("select");
+	});
+
+	it("reselects a different friendly piece when one is already selected", () => {
+		expect(resolveClickAction(PieceColor.WHITE, PieceColor.WHITE, 8, 12)).toBe("reselect");
+	});
+
+	it("deselects when the same piece is clicked again", () => {
+		expect(resolveClickAction(PieceColor.WHITE, PieceColor.WHITE, 12, 12)).toBe("deselect");
+	});
+
+	it("deselects when an empty square is clicked", () => {
+		expect(resolveClickAction(PieceColor.NONE, PieceColor.WHITE, 12, 30)).toBe("deselect");
+	});
+
+	it("deselects when an enemy piece is clicked", () => {
+		expect(resolveClickAction(PieceColor.BLACK, PieceColor.WHITE, 12, 20)).toBe("deselect");
 	});
 });
 

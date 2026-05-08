@@ -1,6 +1,17 @@
 import { IPiece, PieceColor, PieceType } from "../types";
 import { Board } from "./BoardClass";
 
+export function resolveClickAction(
+	clickedColor: PieceColor,
+	currentTurn: PieceColor,
+	selectedSquare: number | null,
+	clickedIndex: number,
+): "select" | "reselect" | "deselect" {
+	if (clickedColor === currentTurn && selectedSquare === null) return "select";
+	if (clickedColor === currentTurn && selectedSquare !== clickedIndex) return "reselect";
+	return "deselect";
+}
+
 function isUpper(s: string) {
 	return s.toUpperCase() === s;
 }
