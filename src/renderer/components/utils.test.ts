@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { indexToAlgebraic, FenDecoder, FenEncoder, resolveClickAction } from "./utils";
+import { indexToAlgebraic, FenDecoder, FenEncoder, resolveClickAction, turnLabel } from "./utils";
 import { PieceType, PieceColor } from "../types";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -57,6 +57,16 @@ describe("FenDecoder", () => {
 		const fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
 		const board = FenDecoder(fen);
 		expect(board.colorTurn).toBe(PieceColor.BLACK);
+	});
+});
+
+describe("turnLabel", () => {
+	it("returns White's Turn for white", () => {
+		expect(turnLabel(PieceColor.WHITE)).toBe("White's Turn");
+	});
+
+	it("returns Black's Turn for black", () => {
+		expect(turnLabel(PieceColor.BLACK)).toBe("Black's Turn");
 	});
 });
 

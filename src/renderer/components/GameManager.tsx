@@ -3,7 +3,7 @@ import { ChessBoard } from "./ChessBoard";
 import "../styles/chess.scss";
 import { useEffect, useState } from "react";
 import { Board } from "./BoardClass";
-import { FenDecoder, FenEncoder, indexToAlgebraic, resolveClickAction } from "./utils";
+import { FenDecoder, FenEncoder, indexToAlgebraic, resolveClickAction, turnLabel } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
 import { IFullTurnMove, IHalfTurnMove, PieceColor, PieceType } from "../types";
 
@@ -139,6 +139,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 				board={board.squares}
 				highlight={selectedSquare}
 				moves={moves}
+				colorTurn={board.colorTurn}
 				handleSelect={handleSelect}
 				handleMove={handleMove}
 			/>
@@ -147,6 +148,10 @@ export const GameManager = ({ fen }: IGameProps) => {
 					<div className="inner" style={{ height }}></div>
 				</div>
 				<div>
+					<div className={`turn-indicator ${board.colorTurn === PieceColor.WHITE ? "white" : "black"}`}>
+						<span className="turn-circle" />
+						<span className="turn-text">{turnLabel(board.colorTurn)}</span>
+					</div>
 					<PastMoveTable pastMoves={pastMoves} />
 					<div className="controls">
 						<div className="group">

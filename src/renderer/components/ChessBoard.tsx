@@ -1,4 +1,4 @@
-import { IBoardProps, PieceType } from "../types";
+import { IBoardProps, PieceColor, PieceType } from "../types";
 import Piece from "./Piece";
 
 import "./board.scss";
@@ -21,9 +21,10 @@ const AttackMove = () => {
 	);
 };
 
-export const ChessBoard = ({ board, highlight, moves, handleSelect, handleMove }: IBoardProps) => {
+export const ChessBoard = ({ board, highlight, moves, colorTurn, handleSelect, handleMove }: IBoardProps) => {
+	const turnClass = colorTurn === PieceColor.WHITE ? "white-turn" : "black-turn";
 	return (
-		<div className="board">
+		<div className={`board ${turnClass}`}>
 			{board.map((p, index) => {
 				const col = index % 8;
 				const file = files[col];

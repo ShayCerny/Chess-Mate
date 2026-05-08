@@ -1,6 +1,10 @@
 import { IPiece, PieceColor, PieceType } from "../types";
 import { Board } from "./BoardClass";
 
+export function turnLabel(color: PieceColor): string {
+	return color === PieceColor.WHITE ? "White's Turn" : "Black's Turn";
+}
+
 export function resolveClickAction(
 	clickedColor: PieceColor,
 	currentTurn: PieceColor,

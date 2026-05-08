@@ -49,6 +49,7 @@ export interface IBoardProps {
 	board: IPiece[];
 	highlight: number | null;
 	moves: number[];
+	colorTurn: PieceColor;
 	handleSelect: (index: number) => void;
 	handleMove: (index: number) => void;
 }
