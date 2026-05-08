@@ -16,7 +16,7 @@
     "defines": [],
     "include_dirs": [],
     "libraries": [],
-    "msbuild_toolset": "v143",
+    "msbuild_toolset": "v145",
     "msvs_windows_target_platform_version": "10.0.26100.0"
   },
   "variables": {
@@ -499,7 +499,7 @@
     "nodedir": "C:\\Users\\shayc\\.electron-gyp\\39.0.0",
     "python": "C:\\Users\\shayc\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
     "standalone_static_library": 1,
-    "msbuild_path": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+    "msbuild_path": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
     "runtime": "electron",
     "target": "39.0.0",
     "build_from_source": "true",
