@@ -5,13 +5,22 @@
 	display: grid;
 	grid-template-columns: repeat(8, calc((100vh - 20px) / 8));
 	grid-template-rows: repeat(8, calc((100vh - 20px) / 8));
-	transition: box-shadow 0.3s ease;
+	position: relative;
 
-	&.white-turn {
+	&::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 200;
+		transition: box-shadow 0.3s ease;
+	}
+
+	&.white-turn::after {
 		box-shadow: inset 0 -10px 24px rgba(240, 217, 181, 0.55);
 	}
 
-	&.black-turn {
+	&.black-turn::after {
 		box-shadow: inset 0 10px 24px rgba(80, 50, 20, 0.55);
 	}
 
