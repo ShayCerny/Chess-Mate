@@ -31,3 +31,4 @@ struct BoardState {
 // squares[0] = a8, squares[63] = h1 (matches TypeScript FenDecoder convention)
 BoardState parseFen(const std::string& fen);
 std::vector<Move> getLegalMoves(const BoardState& state);
+bool isInCheck(const BoardState& state, Color color);

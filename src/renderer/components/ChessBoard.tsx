@@ -21,7 +21,7 @@ const AttackMove = () => {
 	);
 };
 
-export const ChessBoard = ({ board, highlight, moves, colorTurn, handleSelect, handleMove }: IBoardProps) => {
+export const ChessBoard = ({ board, highlight, moves, colorTurn, checkSquare, handleSelect, handleMove }: IBoardProps) => {
 	const turnClass = colorTurn === PieceColor.WHITE ? "white-turn" : "black-turn";
 	return (
 		<div className={`board ${turnClass}`}>
@@ -35,9 +35,10 @@ export const ChessBoard = ({ board, highlight, moves, colorTurn, handleSelect, h
 				const hasPiece = p.type !== "";
 
 				const isMove = moves.includes(index);
+				const isCheck = index === checkSquare;
 
 				return (
-					<div className={`square ${isLight ? "light" : "dark"} ${index == highlight ? "selected" : null} ${hasPiece ? "piece" : null}`} key={index} onClick={() => handleSelect(index)}>
+					<div className={`square ${isLight ? "light" : "dark"} ${index == highlight ? "selected" : null} ${hasPiece ? "piece" : null} ${isCheck ? "in-check" : null}`} key={index} onClick={() => handleSelect(index)}>
 						{isMove && (
 							<div className="move" onClick={() => handleMove(index)}>
 								{board[index].type === "" ? <NormalMove /> : <AttackMove />}

@@ -3,7 +3,7 @@ import { ChessBoard } from "./ChessBoard";
 import "../styles/chess.scss";
 import { useEffect, useState } from "react";
 import { Board } from "./BoardClass";
-import { FenDecoder, FenEncoder, indexToAlgebraic, resolveClickAction, turnLabel } from "./utils";
+import { FenDecoder, FenEncoder, GameStatus, indexToAlgebraic, resolveClickAction, resolveGameStatus, turnLabel } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
 import { IFullTurnMove, IHalfTurnMove, PieceColor, PieceType } from "../types";
 
@@ -30,6 +30,8 @@ export const GameManager = ({ fen }: IGameProps) => {
 
 	const [moves, setMoves] = useState([] as number[]);
 	const [pastMoves, setPastMoves] = useState([] as IFullTurnMove[]);
+	const [gameStatus, setGameStatus] = useState<GameStatus>("playing");
+	const [checkSquare, setCheckSquare] = useState<number | null>(null);
 
 	const whiteAdvantage = 0.5; // when a move is done it should calculate a new position evaluation and return whiteAdvantage
 	const height = `${whiteAdvantage * 100}%`;
@@ -41,6 +43,24 @@ export const GameManager = ({ fen }: IGameProps) => {
 
 		loadFen();
 	}, [fen]);
+
+	const refreshStatus = async (updatedBoard: Board) => {
+		const fen = FenEncoder(updatedBoard);
+		const [allMoves, inCheck] = await Promise.all([
+			window.electronAPI.getLegalMoves(fen),
+			window.electronAPI.isInCheck(fen),
+		]);
+		const status = resolveGameStatus(allMoves.length, inCheck);
+		setGameStatus(status);
+		if (status === "check" || status === "checkmate") {
+			const kingIdx = updatedBoard.squares.findIndex(
+				s => s.type === PieceType.KING && s.color === updatedBoard.colorTurn
+			);
+			setCheckSquare(kingIdx >= 0 ? kingIdx : null);
+		} else {
+			setCheckSquare(null);
+		}
+	};
 
 	const handleGetMoves = async (index: number) => {
 		const fen = FenEncoder(board);
@@ -114,7 +134,9 @@ export const GameManager = ({ fen }: IGameProps) => {
 		setPastMoves(tempPastMoves);
 
 		board.swapTurn();
-		setBoard(new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn));
+		const newBoard = new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn);
+		setBoard(newBoard);
+		refreshStatus(newBoard);
 	};
 
 	const handleUndo = () => {
@@ -130,7 +152,9 @@ export const GameManager = ({ fen }: IGameProps) => {
 			board.undo(last.white);
 			setPastMoves(pastMoves.slice(0, -1));
 		}
-		setBoard(new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn));
+		const newBoard = new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn);
+		setBoard(newBoard);
+		refreshStatus(newBoard);
 	};
 
 	return (
@@ -140,6 +164,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 				highlight={selectedSquare}
 				moves={moves}
 				colorTurn={board.colorTurn}
+				checkSquare={checkSquare}
 				handleSelect={handleSelect}
 				handleMove={handleMove}
 			/>
@@ -148,9 +173,13 @@ export const GameManager = ({ fen }: IGameProps) => {
 					<div className="inner" style={{ height }}></div>
 				</div>
 				<div>
-					<div className={`turn-indicator ${board.colorTurn === PieceColor.WHITE ? "white" : "black"}`}>
+					<div className={`turn-indicator ${board.colorTurn === PieceColor.WHITE ? "white" : "black"}${gameStatus === "check" ? " in-check" : ""}`}>
 						<span className="turn-circle" />
-						<span className="turn-text">{turnLabel(board.colorTurn)}</span>
+						<span className="turn-text">
+							{gameStatus === "check"
+								? `${board.colorTurn === PieceColor.WHITE ? "White" : "Black"} is in check`
+								: turnLabel(board.colorTurn)}
+						</span>
 					</div>
 					<PastMoveTable pastMoves={pastMoves} />
 					<div className="controls">

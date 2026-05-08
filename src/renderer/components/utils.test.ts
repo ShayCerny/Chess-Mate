@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { indexToAlgebraic, FenDecoder, FenEncoder, resolveClickAction, turnLabel } from "./utils";
+import { indexToAlgebraic, FenDecoder, FenEncoder, resolveClickAction, turnLabel, resolveGameStatus } from "./utils";
 import { PieceType, PieceColor } from "../types";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -57,6 +57,24 @@ describe("FenDecoder", () => {
 		const fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
 		const board = FenDecoder(fen);
 		expect(board.colorTurn).toBe(PieceColor.BLACK);
+	});
+});
+
+describe("resolveGameStatus", () => {
+	it("returns 'check' when moves remain and king is in check", () => {
+		expect(resolveGameStatus(5, true)).toBe("check");
+	});
+
+	it("returns 'playing' when moves remain and king is not in check", () => {
+		expect(resolveGameStatus(20, false)).toBe("playing");
+	});
+
+	it("returns 'checkmate' when no moves remain and king is in check", () => {
+		expect(resolveGameStatus(0, true)).toBe("checkmate");
+	});
+
+	it("returns 'stalemate' when no moves remain and king is not in check", () => {
+		expect(resolveGameStatus(0, false)).toBe("stalemate");
 	});
 });
 

@@ -50,6 +50,7 @@ export interface IBoardProps {
 	highlight: number | null;
 	moves: number[];
 	colorTurn: PieceColor;
+	checkSquare: number | null;
 	handleSelect: (index: number) => void;
 	handleMove: (index: number) => void;
 }

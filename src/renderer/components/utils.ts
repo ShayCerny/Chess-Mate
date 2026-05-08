@@ -1,6 +1,13 @@
 import { IPiece, PieceColor, PieceType } from "../types";
 import { Board } from "./BoardClass";
 
+export type GameStatus = "playing" | "check" | "checkmate" | "stalemate";
+
+export function resolveGameStatus(legalMovesCount: number, isInCheck: boolean): GameStatus {
+	if (legalMovesCount === 0) return isInCheck ? "checkmate" : "stalemate";
+	return isInCheck ? "check" : "playing";
+}
+
 export function turnLabel(color: PieceColor): string {
 	return color === PieceColor.WHITE ? "White's Turn" : "Black's Turn";
 }

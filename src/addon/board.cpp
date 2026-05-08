@@ -145,7 +145,7 @@ static int findKing(const BoardState& state, Color color) {
     return -1;
 }
 
-static bool isInCheck(const BoardState& state, Color color) {
+bool isInCheck(const BoardState& state, Color color) {
     int k = findKing(state, color);
     if (k < 0) return false;
     Color enemy = (color == Color::WHITE) ? Color::BLACK : Color::WHITE;

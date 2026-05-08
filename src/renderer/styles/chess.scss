@@ -72,6 +72,15 @@
 						box-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
 					}
 				}
+
+				&.in-check {
+					background-color: #4a1a1a;
+					box-shadow: 0 0 12px rgba(220, 50, 50, 0.5);
+
+					.turn-text {
+						color: #ff8080;
+					}
+				}
 			}
 
 			#move-tree {

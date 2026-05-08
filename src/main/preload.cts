@@ -5,4 +5,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
         ipcRenderer.invoke("chess:get-legal-moves", fen),
     getBestMove: (fen: string): Promise<[number, number] | null> =>
         ipcRenderer.invoke("chess:get-best-move", fen),
+    isInCheck: (fen: string): Promise<boolean> =>
+        ipcRenderer.invoke("chess:is-in-check", fen),
 });
