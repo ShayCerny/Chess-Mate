@@ -1,4 +1,4 @@
-import { IPiece, PieceColor, PieceType } from "../types";
+import { GameResult, IPiece, PieceColor, PieceType } from "../types";
 import { Board } from "./BoardClass";
 
 export type GameStatus = "playing" | "check" | "checkmate" | "stalemate";
@@ -10,6 +10,19 @@ export function resolveGameStatus(legalMovesCount: number, isInCheck: boolean): 
 
 export function turnLabel(color: PieceColor): string {
 	return color === PieceColor.WHITE ? "White's Turn" : "Black's Turn";
+}
+
+export function resolveGameResult(status: GameStatus, colorTurn: PieceColor): GameResult | null {
+	if (status === "checkmate") {
+		return {
+			reason: "checkmate",
+			winner: colorTurn === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE,
+		};
+	}
+	if (status === "stalemate") {
+		return { reason: "stalemate" };
+	}
+	return null;
 }
 
 export function resolveClickAction(

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { indexToAlgebraic, FenDecoder, FenEncoder, resolveClickAction, turnLabel, resolveGameStatus } from "./utils";
+import { indexToAlgebraic, FenDecoder, FenEncoder, resolveClickAction, turnLabel, resolveGameStatus, resolveGameResult } from "./utils";
 import { PieceType, PieceColor } from "../types";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -107,6 +107,36 @@ describe("resolveClickAction", () => {
 
 	it("deselects when an enemy piece is clicked", () => {
 		expect(resolveClickAction(PieceColor.BLACK, PieceColor.WHITE, 12, 20)).toBe("deselect");
+	});
+});
+
+describe("resolveGameResult", () => {
+	it("returns null when playing", () => {
+		expect(resolveGameResult("playing", PieceColor.WHITE)).toBeNull();
+	});
+
+	it("returns null when in check", () => {
+		expect(resolveGameResult("check", PieceColor.BLACK)).toBeNull();
+	});
+
+	it("returns checkmate with Black as winner when White is checkmated", () => {
+		expect(resolveGameResult("checkmate", PieceColor.WHITE)).toEqual({
+			reason: "checkmate",
+			winner: PieceColor.BLACK,
+		});
+	});
+
+	it("returns checkmate with White as winner when Black is checkmated", () => {
+		expect(resolveGameResult("checkmate", PieceColor.BLACK)).toEqual({
+			reason: "checkmate",
+			winner: PieceColor.WHITE,
+		});
+	});
+
+	it("returns stalemate with no winner", () => {
+		expect(resolveGameResult("stalemate", PieceColor.WHITE)).toEqual({
+			reason: "stalemate",
+		});
 	});
 });
 

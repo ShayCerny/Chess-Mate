@@ -21,7 +21,7 @@ const AttackMove = () => {
 	);
 };
 
-export const ChessBoard = ({ board, highlight, moves, colorTurn, checkSquare, handleSelect, handleMove }: IBoardProps) => {
+export const ChessBoard = ({ board, highlight, moves, colorTurn, checkSquare, locked, handleSelect, handleMove }: IBoardProps) => {
 	const turnClass = colorTurn === PieceColor.WHITE ? "white-turn" : "black-turn";
 	return (
 		<div className={`board ${turnClass}`}>
@@ -38,9 +38,9 @@ export const ChessBoard = ({ board, highlight, moves, colorTurn, checkSquare, ha
 				const isCheck = index === checkSquare;
 
 				return (
-					<div className={`square ${isLight ? "light" : "dark"} ${index == highlight ? "selected" : null} ${hasPiece ? "piece" : null} ${isCheck ? "in-check" : null}`} key={index} onClick={() => handleSelect(index)}>
+					<div className={`square ${isLight ? "light" : "dark"} ${index == highlight ? "selected" : null} ${hasPiece ? "piece" : null} ${isCheck ? "in-check" : null}`} key={index} onClick={() => !locked && handleSelect(index)}>
 						{isMove && (
-							<div className="move" onClick={() => handleMove(index)}>
+							<div className="move" onClick={() => !locked && handleMove(index)}>
 								{board[index].type === "" ? <NormalMove /> : <AttackMove />}
 							</div>
 						)}

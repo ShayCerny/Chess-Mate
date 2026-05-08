@@ -45,12 +45,20 @@ export interface IHalfTurnMove {
 	halfTurnBefore: number;
 }
 
+export type GameResultReason = 'checkmate' | 'stalemate' | 'draw' | 'resign';
+
+export interface GameResult {
+	reason: GameResultReason;
+	winner?: PieceColor;
+}
+
 export interface IBoardProps {
 	board: IPiece[];
 	highlight: number | null;
 	moves: number[];
 	colorTurn: PieceColor;
 	checkSquare: number | null;
+	locked: boolean;
 	handleSelect: (index: number) => void;
 	handleMove: (index: number) => void;
 }

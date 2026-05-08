@@ -3,9 +3,9 @@ import { ChessBoard } from "./ChessBoard";
 import "../styles/chess.scss";
 import { useEffect, useState } from "react";
 import { Board } from "./BoardClass";
-import { FenDecoder, FenEncoder, GameStatus, indexToAlgebraic, resolveClickAction, resolveGameStatus, turnLabel } from "./utils";
+import { FenDecoder, FenEncoder, GameStatus, indexToAlgebraic, resolveClickAction, resolveGameResult, resolveGameStatus, turnLabel } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
-import { IFullTurnMove, IHalfTurnMove, PieceColor, PieceType } from "../types";
+import { GameResult, IFullTurnMove, IHalfTurnMove, PieceColor, PieceType } from "../types";
 
 // exportFEN(board)
 
@@ -32,6 +32,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 	const [pastMoves, setPastMoves] = useState([] as IFullTurnMove[]);
 	const [gameStatus, setGameStatus] = useState<GameStatus>("playing");
 	const [checkSquare, setCheckSquare] = useState<number | null>(null);
+	const [gameResult, setGameResult] = useState<GameResult | null>(null);
 
 	const whiteAdvantage = 0.5; // when a move is done it should calculate a new position evaluation and return whiteAdvantage
 	const height = `${whiteAdvantage * 100}%`;
@@ -52,6 +53,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 		]);
 		const status = resolveGameStatus(allMoves.length, inCheck);
 		setGameStatus(status);
+		setGameResult(resolveGameResult(status, updatedBoard.colorTurn));
 		if (status === "check" || status === "checkmate") {
 			const kingIdx = updatedBoard.squares.findIndex(
 				s => s.type === PieceType.KING && s.color === updatedBoard.colorTurn
@@ -139,6 +141,18 @@ export const GameManager = ({ fen }: IGameProps) => {
 		refreshStatus(newBoard);
 	};
 
+	const handleNewGame = () => {
+		const startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+		setBoard(FenDecoder(startFen));
+		setSelectedSquare(null);
+		setEnPassantSqaure(null);
+		setMoves([]);
+		setPastMoves([]);
+		setGameStatus("playing");
+		setGameResult(null);
+		setCheckSquare(null);
+	};
+
 	const handleUndo = () => {
 		if (pastMoves.length === 0) return;
 
@@ -165,6 +179,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 				moves={moves}
 				colorTurn={board.colorTurn}
 				checkSquare={checkSquare}
+				locked={gameResult !== null}
 				handleSelect={handleSelect}
 				handleMove={handleMove}
 			/>
@@ -187,11 +202,12 @@ export const GameManager = ({ fen }: IGameProps) => {
 							<h3 className="group-title">Game Controls</h3>
 							<button className="control-btn export">Export FEN</button>
 							<div className="row">
-								<button className="control-btn undo" onClick={handleUndo}>
+								<button className="control-btn undo" onClick={handleUndo} disabled={gameResult !== null}>
 									Undo
 								</button>
-								<button className="control-btn redo">Redo</button>
+								<button className="control-btn redo" disabled={gameResult !== null}>Redo</button>
 							</div>
+							<button className="control-btn new-game" onClick={handleNewGame}>New Game</button>
 						</div>
 						<hr />
 						<div className="group">
