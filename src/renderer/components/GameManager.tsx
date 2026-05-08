@@ -1,5 +1,6 @@
 import { ChessBoard } from "./ChessBoard";
 import { GameEndModal } from "./GameEndModal";
+import { ResignConfirmModal } from "./ResignConfirmModal";
 
 import "../styles/chess.scss";
 import { useEffect, useState } from "react";
@@ -36,6 +37,7 @@ export const GameManager = ({ fen }: IGameProps) => {
 	const [checkSquare, setCheckSquare] = useState<number | null>(null);
 	const [gameResult, setGameResult] = useState<GameResult | null>(null);
 	const [modalVisible, setModalVisible] = useState(false);
+	const [resignConfirmVisible, setResignConfirmVisible] = useState(false);
 
 	const whiteAdvantage = 0.5; // when a move is done it should calculate a new position evaluation and return whiteAdvantage
 	const height = `${whiteAdvantage * 100}%`;
@@ -159,6 +161,21 @@ export const GameManager = ({ fen }: IGameProps) => {
 		setGameResult(null);
 		setCheckSquare(null);
 		setModalVisible(false);
+		setResignConfirmVisible(false);
+	};
+
+	const handleResignClick = () => setResignConfirmVisible(true);
+
+	const handleResignConfirm = () => {
+		const opponent = board.colorTurn === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+		setGameResult({ reason: "resign", winner: opponent });
+		setModalVisible(true);
+		setResignConfirmVisible(false);
+	};
+
+	const handleOfferDraw = () => {
+		setGameResult({ reason: "draw" });
+		setModalVisible(true);
 	};
 
 	const handleUndo = () => {
@@ -225,6 +242,13 @@ export const GameManager = ({ fen }: IGameProps) => {
 					onReview={() => setModalVisible(false)}
 				/>
 			)}
+			{resignConfirmVisible && (
+				<ResignConfirmModal
+					colorTurn={board.colorTurn}
+					onConfirm={handleResignConfirm}
+					onCancel={() => setResignConfirmVisible(false)}
+				/>
+			)}
 			<ChessBoard
 				board={board.squares}
 				highlight={selectedSquare}
@@ -272,8 +296,8 @@ export const GameManager = ({ fen }: IGameProps) => {
 						<hr />
 						<div className="group">
 							<h3 className="group-title">Game Options</h3>
-							<button className="control-btn resign">Resign</button>
-							<button className="control-btn draw">Offer Draw</button>
+							<button className="control-btn resign" onClick={handleResignClick} disabled={gameResult !== null}>Resign</button>
+							<button className="control-btn draw" onClick={handleOfferDraw} disabled={gameResult !== null}>Offer Draw</button>
 						</div>
 					</div>
 				</div>

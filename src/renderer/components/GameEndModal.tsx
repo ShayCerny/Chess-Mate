@@ -14,6 +14,13 @@ function headline(gameResult: GameResult): string {
 	if (gameResult.reason === "checkmate" && gameResult.winner !== undefined) {
 		return `Checkmate — ${winnerLabel(gameResult.winner)} wins`;
 	}
+	if (gameResult.reason === "resign" && gameResult.winner !== undefined) {
+		const loser = gameResult.winner === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+		return `${winnerLabel(loser)} resigned — ${winnerLabel(gameResult.winner)} wins`;
+	}
+	if (gameResult.reason === "draw") {
+		return "Draw agreed";
+	}
 	return "Stalemate — Draw";
 }
 

@@ -319,6 +319,14 @@
 			text-align: center;
 		}
 
+		.modal-subtext {
+			margin: 0;
+			font-family: "Inter", sans-serif;
+			font-size: 14px;
+			color: #aaa;
+			text-align: center;
+		}
+
 		.modal-actions {
 			display: flex;
 			gap: 14px;
@@ -356,6 +364,15 @@
 
 					&:hover {
 						background-color: #505050;
+					}
+				}
+
+				&.confirm-resign {
+					background-color: #7a2a2a;
+					color: #f1f1f1;
+
+					&:hover {
+						background-color: #9a3a3a;
 					}
 				}
 			}
