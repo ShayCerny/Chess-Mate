@@ -3,30 +3,18 @@ import { GameEndModal } from "./GameEndModal";
 import { ResignConfirmModal } from "./ResignConfirmModal";
 
 import "../styles/chess.scss";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Board } from "./BoardClass";
 import { FenDecoder, FenEncoder, indexToAlgebraic, resolveClickAction, resolveGameResult, resolveGameStatus } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
-import { GameResult, IFullTurnMove, IHalfTurnMove, MoveType, PieceColor, PieceType } from "../types";
+import { GameConfig, GameResult, IFullTurnMove, IHalfTurnMove, MoveType, PieceColor, PieceType } from "../types";
 
-// exportFEN(board)
+type IGameProps = GameConfig & { onReturnToMenu: () => void };
 
-// undo(moveTree)
+const standardFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-// redo(moveTree)
-
-// getHint(board?)
-
-// resign()
-
-// offerDraw()
-
-interface IGameProps {
-	fen: string;
-}
-
-export const GameManager = ({ fen }: IGameProps) => {
-	const [board, setBoard] = useState(new Board([], PieceColor.WHITE, "", "", 1, 0));
+export const GameManager = ({ onReturnToMenu }: IGameProps) => {
+	const [board, setBoard] = useState(() => FenDecoder(standardFen));
 	const [selectedSquare, setSelectedSquare] = useState(null as null | number);
 	const [enPassantSquare, setEnPassantSqaure] = useState(null as null | number);
 
@@ -40,14 +28,6 @@ const [checkSquare, setCheckSquare] = useState<number | null>(null);
 
 	const whiteAdvantage = 0.5; // when a move is done it should calculate a new position evaluation and return whiteAdvantage
 	const height = `${whiteAdvantage * 100}%`;
-
-	useEffect(() => {
-		const loadFen = () => {
-			setBoard(FenDecoder(fen));
-		};
-
-		loadFen();
-	}, [fen]);
 
 	const refreshStatus = async (updatedBoard: Board) => {
 		const fen = FenEncoder(updatedBoard);
@@ -87,7 +67,6 @@ const [checkSquare, setCheckSquare] = useState<number | null>(null);
 	};
 
 	const handleMove = (index: number) => {
-		setEnPassantSqaure(null);
 		setFutureMoves([]);
 
 		if (selectedSquare === null) return;
@@ -104,21 +83,24 @@ const [checkSquare, setCheckSquare] = useState<number | null>(null);
 			enPassant = true;
 
 		const piece = board.atPos(selectedSquare);
-		if (piece.type === PieceType.PAWN && Math.abs(selectedSquare - index) === 16) {
-			const direction = piece.color === "w" ? 8 : -8;
-			const epIndex = selectedSquare + direction;
-			setEnPassantSqaure(epIndex);
-			board.enPassant = indexToAlgebraic(epIndex);
-		} else {
-			board.enPassant = "-";
-		}
 
+		// Snapshot before updating en passant so undo can restore the correct ep state
 		const snapshot = {
 			castlesBefore: board.castles,
 			enPassantBefore: board.enPassant,
 			fullTurnBefore: board.fullTurn,
 			halfTurnBefore: board.halfTurn,
 		};
+
+		if (piece.type === PieceType.PAWN && Math.abs(selectedSquare - index) === 16) {
+			const direction = piece.color === "w" ? -8 : 8;
+			const epIndex = selectedSquare + direction;
+			setEnPassantSqaure(epIndex);
+			board.enPassant = indexToAlgebraic(epIndex);
+		} else {
+			setEnPassantSqaure(null);
+			board.enPassant = "-";
+		}
 
 		const { attacked, movedPiece, moveType } = board.move(selectedSquare, index, enPassant);
 		setSelectedSquare(null);
@@ -207,7 +189,7 @@ const [checkSquare, setCheckSquare] = useState<number | null>(null);
 		board.move(move.from, move.to, isEnPassant);
 
 		if (move.piece.type === PieceType.PAWN && Math.abs(move.from - move.to) === 16) {
-			const direction = move.piece.color === PieceColor.WHITE ? 8 : -8;
+			const direction = move.piece.color === PieceColor.WHITE ? -8 : 8;
 			const epIndex = move.from + direction;
 			setEnPassantSqaure(epIndex);
 			board.enPassant = indexToAlgebraic(epIndex);
@@ -273,6 +255,7 @@ const [checkSquare, setCheckSquare] = useState<number | null>(null);
 								<button className="control-btn redo" onClick={handleRedo} disabled={futureMoves.length === 0}>Redo</button>
 							</div>
 							<button className="control-btn new-game" onClick={handleNewGame}>New Game</button>
+							<button className="control-btn" onClick={onReturnToMenu}>Return to Menu</button>
 						</div>
 						<hr />
 						<div className="group">

@@ -52,6 +52,28 @@ export interface GameResult {
 	winner?: PieceColor;
 }
 
+export enum GameMode {
+	twoPlayer = 'twoPlayer',
+	vsComputer = 'vsComputer',
+}
+
+export enum Difficulty {
+	easy = 'easy',
+	medium = 'medium',
+	hard = 'hard',
+}
+
+export enum PlayerColor {
+	white = 'white',
+	black = 'black',
+}
+
+export interface GameConfig {
+	mode: GameMode;
+	difficulty: Difficulty;
+	playerColor: PlayerColor;
+}
+
 export interface IBoardProps {
 	board: IPiece[];
 	highlight: number | null;
