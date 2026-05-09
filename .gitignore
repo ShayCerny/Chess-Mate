@@ -17,10 +17,13 @@ dist-electron
 # Planning & generated docs
 prd.md
 plan.md
+docs/adr/
 docs/issues/
 .agents/
 .agents/once.ps1
 .agents/prompt.md
+CLAUDE.md
+skills-lock.json
 
 # Vim backup and undo files
 *~
