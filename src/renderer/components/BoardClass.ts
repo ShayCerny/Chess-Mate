@@ -35,7 +35,7 @@ export class Board {
 
 		if (enPassant) {
 			const color = this.squares[fromIndex].color;
-			const direction = color === "w" ? -8 : 8;
+			const direction = color === "w" ? 8 : -8;
 
 			const attackedSpace = toIndex + direction;
 			attacked = { ...this.squares[attackedSpace] };
@@ -88,7 +88,7 @@ export class Board {
 			this.squares[move.to - 2] = { type: PieceType.ROOK, color: move.piece.color };
 		} else if (move.type === MoveType.ENPASSANT) {
 			const enemyColor = move.piece.color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
-			const direction = move.piece.color === PieceColor.WHITE ? -8 : 8;
+			const direction = move.piece.color === PieceColor.WHITE ? 8 : -8;
 			this.squares[move.to] = { type: PieceType.NONE, color: PieceColor.NONE };
 			this.squares[move.to + direction] = { type: PieceType.PAWN, color: enemyColor };
 		} else {
