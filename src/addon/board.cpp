@@ -357,3 +357,93 @@ std::vector<Move> getLegalMoves(const BoardState& state) {
 
     return legal;
 }
+
+// ── Evaluation ────────────────────────────────────────────────────────────────
+
+static int pieceValue(Piece p) {
+    switch (p) {
+        case Piece::PAWN:   return 100;
+        case Piece::KNIGHT: return 320;
+        case Piece::BISHOP: return 330;
+        case Piece::ROOK:   return 500;
+        case Piece::QUEEN:  return 900;
+        case Piece::KING:   return 20000;
+        default:            return 0;
+    }
+}
+
+// Returns material balance from White's perspective (positive = good for White).
+// Structured as a separate function so piece-square tables, mobility, and king
+// safety can be added here without touching the search algorithm.
+static int evaluate(const BoardState& state) {
+    int score = 0;
+    for (int i = 0; i < 64; i++) {
+        const Square& sq = state.squares[i];
+        if (sq.color == Color::NONE) continue;
+        int val = pieceValue(sq.piece);
+        score += (sq.color == Color::WHITE) ? val : -val;
+    }
+    return score;
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+
+static const int INF = 1000000;
+
+static int minimax(const BoardState& state, int depth, int alpha, int beta) {
+    std::vector<Move> moves = getLegalMoves(state);
+
+    if (moves.empty()) {
+        if (isInCheck(state, state.turn))
+            return (state.turn == Color::WHITE) ? -INF : INF; // checkmate
+        return 0; // stalemate
+    }
+
+    if (depth == 0) return evaluate(state);
+
+    if (state.turn == Color::WHITE) {
+        int best = -INF;
+        for (const Move& m : moves) {
+            int val = minimax(applyMove(state, m), depth - 1, alpha, beta);
+            if (val > best) best = val;
+            if (val > alpha) alpha = val;
+            if (beta <= alpha) break;
+        }
+        return best;
+    } else {
+        int best = INF;
+        for (const Move& m : moves) {
+            int val = minimax(applyMove(state, m), depth - 1, alpha, beta);
+            if (val < best) best = val;
+            if (val < beta) beta = val;
+            if (beta <= alpha) break;
+        }
+        return best;
+    }
+}
+
+Move getBestMove(const BoardState& state, int difficulty) {
+    int depth;
+    switch (difficulty) {
+        case 1:  depth = 3; break; // Medium
+        case 2:  depth = 4; break; // Hard
+        default: depth = 2; break; // Easy
+    }
+
+    std::vector<Move> moves = getLegalMoves(state);
+    if (moves.empty()) return {-1, -1};
+
+    Move best = moves[0];
+    bool isWhite = (state.turn == Color::WHITE);
+    int bestVal = isWhite ? -INF - 1 : INF + 1;
+
+    for (const Move& m : moves) {
+        int val = minimax(applyMove(state, m), depth - 1, -INF, INF);
+        if ((isWhite && val > bestVal) || (!isWhite && val < bestVal)) {
+            bestVal = val;
+            best = m;
+        }
+    }
+
+    return best;
+}

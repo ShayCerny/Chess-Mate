@@ -4,7 +4,11 @@ import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 
-let chessEngine: { getLegalMoves: (fen: string) => number[][]; isInCheck: (fen: string) => boolean } | null = null;
+let chessEngine: {
+    getLegalMoves: (fen: string) => number[][];
+    isInCheck: (fen: string) => boolean;
+    getBestMove: (fen: string, difficulty: number) => [number, number] | null;
+} | null = null;
 
 function loadChessEngine() {
     if (chessEngine) return chessEngine;
@@ -27,6 +31,11 @@ ipcMain.handle("chess:get-legal-moves", (_event, fen: string) => {
 ipcMain.handle("chess:is-in-check", (_event, fen: string) => {
     const engine = loadChessEngine();
     return engine && typeof engine.isInCheck === 'function' ? engine.isInCheck(fen) : false;
+});
+
+ipcMain.handle("chess:get-best-move", (_event, fen: string, difficulty: number) => {
+    const engine = loadChessEngine();
+    return engine && typeof engine.getBestMove === 'function' ? engine.getBestMove(fen, difficulty) : null;
 });
 
 ipcMain.on("app-close", () => {
