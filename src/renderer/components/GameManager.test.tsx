@@ -1,12 +1,15 @@
 // @vitest-environment jsdom
-import { render, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { render, cleanup, waitFor, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
 vi.mock('./Piece', () => ({ default: () => null }));
 import { GameManager } from './GameManager';
 import { Difficulty, GameMode, PlayerColor } from '../types';
 
-afterEach(cleanup);
+afterEach(() => {
+	cleanup();
+	vi.useRealTimers();
+});
 
 const defaultProps = {
 	mode: GameMode.twoPlayer,
@@ -73,5 +76,117 @@ describe('GameManager IPC', () => {
 			const squares = container.querySelectorAll('.square');
 			expect(squares[60].classList.contains('in-check')).toBe(true);
 		});
+	});
+});
+
+describe('vsComputer mode', () => {
+	it('calls getBestMove after human move', async () => {
+		vi.useFakeTimers();
+		setupElectronAPI([[52, 36], [52, 44]]);
+
+		const { container } = render(<GameManager {...defaultProps} mode={GameMode.vsComputer} />);
+		await act(async () => { await Promise.resolve(); });
+
+		const squares = container.querySelectorAll('.square');
+		fireEvent.click(squares[52]);
+		fireEvent.click(squares[36].querySelector('.move')!);
+
+		expect(window.electronAPI.getBestMove).not.toHaveBeenCalled();
+
+		await act(async () => {
+			vi.advanceTimersByTime(500);
+			await Promise.resolve();
+		});
+
+		expect(window.electronAPI.getBestMove).toHaveBeenCalled();
+	});
+
+	it('does not call getBestMove in twoPlayer mode', async () => {
+		vi.useFakeTimers();
+		setupElectronAPI([[52, 36], [52, 44]]);
+
+		const { container } = render(<GameManager {...defaultProps} mode={GameMode.twoPlayer} />);
+		await act(async () => { await Promise.resolve(); });
+
+		const squares = container.querySelectorAll('.square');
+		fireEvent.click(squares[52]);
+		fireEvent.click(squares[36].querySelector('.move')!);
+
+		await act(async () => {
+			vi.advanceTimersByTime(500);
+			await Promise.resolve();
+		});
+
+		expect(window.electronAPI.getBestMove).not.toHaveBeenCalled();
+	});
+
+	it('calls getBestMove on mount when playing as Black', async () => {
+		vi.useFakeTimers();
+		setupElectronAPI([[8, 16]]);
+
+		render(<GameManager {...defaultProps} mode={GameMode.vsComputer} playerColor={PlayerColor.black} />);
+
+		expect(window.electronAPI.getBestMove).not.toHaveBeenCalled();
+
+		await act(async () => {
+			vi.advanceTimersByTime(500);
+			await Promise.resolve();
+		});
+
+		expect(window.electronAPI.getBestMove).toHaveBeenCalled();
+	});
+
+	it('does not call getBestMove on mount when playing as White', async () => {
+		vi.useFakeTimers();
+		setupElectronAPI([[52, 36]]);
+
+		render(<GameManager {...defaultProps} mode={GameMode.vsComputer} playerColor={PlayerColor.white} />);
+
+		await act(async () => {
+			vi.advanceTimersByTime(500);
+			await Promise.resolve();
+		});
+
+		expect(window.electronAPI.getBestMove).not.toHaveBeenCalled();
+	});
+});
+
+describe('Resign', () => {
+	it('calls onReturnToMenu after resign confirmation and does not show result modal', async () => {
+		const onReturnToMenu = vi.fn();
+		setupElectronAPI();
+		const { getByText, queryByRole } = render(
+			<GameManager {...defaultProps} onReturnToMenu={onReturnToMenu} />
+		);
+		await waitFor(() => expect(window.electronAPI.getGameState).toHaveBeenCalled());
+
+		fireEvent.click(getByText('Resign'));
+		fireEvent.click(getByText('Confirm Resign'));
+
+		expect(onReturnToMenu).toHaveBeenCalled();
+		expect(queryByRole('dialog')).toBeNull();
+	});
+});
+
+describe('Navigation', () => {
+	it('result modal has Return to Menu button', async () => {
+		setupElectronAPI([], null);
+		const { getByText } = render(<GameManager {...defaultProps} />);
+		await waitFor(() => expect(window.electronAPI.getGameState).toHaveBeenCalled());
+
+		fireEvent.click(getByText('Offer Draw'));
+
+		expect(getByText('Return to Menu')).toBeTruthy();
+	});
+
+	it('sidebar has Main Menu button that calls onReturnToMenu', async () => {
+		const onReturnToMenu = vi.fn();
+		setupElectronAPI();
+		const { getAllByText } = render(<GameManager {...defaultProps} onReturnToMenu={onReturnToMenu} />);
+		await waitFor(() => expect(window.electronAPI.getGameState).toHaveBeenCalled());
+
+		fireEvent.click(getAllByText('Main Menu')[0]);
+
+		expect(onReturnToMenu).toHaveBeenCalled();
 	});
 });

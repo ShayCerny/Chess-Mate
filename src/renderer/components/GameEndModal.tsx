@@ -2,7 +2,7 @@ import { GameResult, PieceColor } from "../types";
 
 interface IGameEndModalProps {
 	gameResult: GameResult;
-	onNewGame: () => void;
+	onReturnToMenu: () => void;
 	onReview: () => void;
 }
 
@@ -24,13 +24,13 @@ function headline(gameResult: GameResult): string {
 	return "Stalemate — Draw";
 }
 
-export const GameEndModal = ({ gameResult, onNewGame, onReview }: IGameEndModalProps) => {
+export const GameEndModal = ({ gameResult, onReturnToMenu, onReview }: IGameEndModalProps) => {
 	return (
 		<div className="modal-overlay">
 			<div className="modal" role="dialog" aria-modal="true">
 				<h2 className="modal-headline">{headline(gameResult)}</h2>
 				<div className="modal-actions">
-					<button className="modal-btn new-game" onClick={onNewGame}>New Game</button>
+					<button className="modal-btn return-to-menu" onClick={onReturnToMenu}>Return to Menu</button>
 					<button className="modal-btn review" onClick={onReview}>Review</button>
 				</div>
 			</div>

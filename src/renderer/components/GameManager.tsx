@@ -7,11 +7,17 @@ import { useState, useEffect, useRef } from "react";
 import { Game } from "./Game";
 import { resolveClickAction, resolveGameResult, resolveGameStatus } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
-import { GameConfig, GameMode, GameResult, IHalfTurnMove, IPiece, PieceColor } from "../types";
+import { Difficulty, GameConfig, GameMode, GameResult, IHalfTurnMove, IPiece, PieceColor, PlayerColor } from "../types";
 
 type IGameProps = GameConfig & { onReturnToMenu: () => void };
 
-export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
+const DIFFICULTY_LEVEL: Record<Difficulty, number> = {
+	[Difficulty.easy]: 0,
+	[Difficulty.medium]: 1,
+	[Difficulty.hard]: 2,
+};
+
+export const GameManager = ({ mode, difficulty, playerColor, onReturnToMenu }: IGameProps) => {
 	const gameRef = useRef<Game>(new Game());
 
 	const [board, setBoard] = useState<IPiece[]>(() => gameRef.current.state.board);
@@ -50,12 +56,28 @@ export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
 		}
 	};
 
+	const scheduleBestMove = (fen: string) => {
+		setTimeout(async () => {
+			if (gameRef.current.state.gameEnded) return;
+			const move = await window.electronAPI.getBestMove(fen, DIFFICULTY_LEVEL[difficulty]);
+			if (!move || gameRef.current.state.gameEnded) return;
+			const gs = gameRef.current.move(move[0], move[1]);
+			syncFromGame();
+			setSelectedSquare(null);
+			setMoves([]);
+			refreshStatus(gs.fen);
+		}, 500);
+	};
+
 	useEffect(() => {
 		const fen = gameRef.current.state.fen;
 		window.electronAPI.getGameState(fen).then(({ moves: legalMoves, checkSquare: cs }) => {
 			setAllMoves(legalMoves);
 			setCheckSquare(cs);
 		});
+		if (mode === GameMode.vsComputer && playerColor === PlayerColor.black) {
+			scheduleBestMove(fen);
+		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -81,31 +103,14 @@ export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
 		setSelectedSquare(null);
 		setMoves([]);
 		refreshStatus(gs.fen);
-	};
-
-	const handleNewGame = () => {
-		gameRef.current = new Game();
-		syncFromGame();
-		setSelectedSquare(null);
-		setMoves([]);
-		setAllMoves([]);
-		setCheckSquare(null);
-		setGameResult(null);
-		setModalVisible(false);
-		setResignConfirmVisible(false);
-		window.electronAPI.getGameState(gameRef.current.state.fen).then(({ moves: legalMoves, checkSquare: cs }) => {
-			setAllMoves(legalMoves);
-			setCheckSquare(cs);
-		});
+		if (mode === GameMode.vsComputer) scheduleBestMove(gs.fen);
 	};
 
 	const handleResignClick = () => setResignConfirmVisible(true);
 
 	const handleResignConfirm = () => {
-		const opponent = colorTurn === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
-		setGameResult({ reason: "resign", winner: opponent });
-		setModalVisible(true);
 		setResignConfirmVisible(false);
+		onReturnToMenu();
 	};
 
 	const handleOfferDraw = () => {
@@ -136,7 +141,7 @@ export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
 			{modalVisible && gameResult !== null && (
 				<GameEndModal
 					gameResult={gameResult}
-					onNewGame={handleNewGame}
+					onReturnToMenu={onReturnToMenu}
 					onReview={() => setModalVisible(false)}
 				/>
 			)}
@@ -173,8 +178,7 @@ export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
 								</button>
 								<button className="control-btn redo" onClick={handleRedo} disabled={futureMoves.length === 0}>Redo</button>
 							</div>
-							<button className="control-btn new-game" onClick={handleNewGame}>New Game</button>
-							<button className="control-btn" onClick={onReturnToMenu}>Return to Menu</button>
+							<button className="control-btn main-menu" onClick={onReturnToMenu}>Main Menu</button>
 						</div>
 						<hr />
 						<div className="group">
