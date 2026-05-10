@@ -3,35 +3,55 @@ import { GameEndModal } from "./GameEndModal";
 import { ResignConfirmModal } from "./ResignConfirmModal";
 
 import "../styles/chess.scss";
-import { useState, useEffect } from "react";
-import { Board } from "./BoardClass";
-import { FenDecoder, FenEncoder, indexToAlgebraic, resolveClickAction, resolveGameResult, resolveGameStatus } from "./utils";
+import { useState, useEffect, useRef } from "react";
+import { Game } from "./Game";
+import { resolveClickAction, resolveGameResult, resolveGameStatus } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
-import { GameConfig, GameMode, GameResult, IHalfTurnMove, MoveType, PieceColor, PieceType } from "../types";
+import { GameConfig, GameMode, GameResult, IHalfTurnMove, IPiece, PieceColor } from "../types";
 
 type IGameProps = GameConfig & { onReturnToMenu: () => void };
 
-const standardFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
 export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
-	const [board, setBoard] = useState(() => FenDecoder(standardFen));
-	const [selectedSquare, setSelectedSquare] = useState(null as null | number);
-	const [enPassantSquare, setEnPassantSqaure] = useState(null as null | number);
+	const gameRef = useRef<Game>(new Game());
 
-	const [moves, setMoves] = useState([] as number[]);
+	const [board, setBoard] = useState<IPiece[]>(() => gameRef.current.state.board);
+	const [colorTurn, setColorTurn] = useState<PieceColor>(() => gameRef.current.state.colorTurn);
+	const [selectedSquare, setSelectedSquare] = useState<number | null>(null);
+	const [moves, setMoves] = useState<number[]>([]);
 	const [allMoves, setAllMoves] = useState<number[][]>([]);
-	const [pastMoves, setPastMoves] = useState([] as IHalfTurnMove[]);
-	const [futureMoves, setFutureMoves] = useState([] as IHalfTurnMove[]);
+	const [pastMoves, setPastMoves] = useState<IHalfTurnMove[]>([]);
+	const [futureMoves, setFutureMoves] = useState<IHalfTurnMove[]>([]);
 	const [checkSquare, setCheckSquare] = useState<number | null>(null);
 	const [gameResult, setGameResult] = useState<GameResult | null>(null);
 	const [modalVisible, setModalVisible] = useState(false);
 	const [resignConfirmVisible, setResignConfirmVisible] = useState(false);
 
-	const whiteAdvantage = 0.5; // when a move is done it should calculate a new position evaluation and return whiteAdvantage
+	const whiteAdvantage = 0.5;
 	const height = `${whiteAdvantage * 100}%`;
 
+	const syncFromGame = () => {
+		const gs = gameRef.current.state;
+		setBoard(gs.board);
+		setColorTurn(gs.colorTurn);
+		setPastMoves(gs.pastMoves);
+		setFutureMoves(gs.futureMoves);
+	};
+
+	const refreshStatus = async (fen: string) => {
+		const { moves: legalMoves, checkSquare: cs } = await window.electronAPI.getGameState(fen);
+		setAllMoves(legalMoves);
+		setCheckSquare(cs);
+		const status = resolveGameStatus(legalMoves.length, cs !== null);
+		const result = resolveGameResult(status, gameRef.current.state.colorTurn);
+		if (result !== null) {
+			gameRef.current.setGameEnded(true);
+			setGameResult(result);
+			setModalVisible(true);
+		}
+	};
+
 	useEffect(() => {
-		const fen = FenEncoder(board);
+		const fen = gameRef.current.state.fen;
 		window.electronAPI.getGameState(fen).then(({ moves: legalMoves, checkSquare: cs }) => {
 			setAllMoves(legalMoves);
 			setCheckSquare(cs);
@@ -39,107 +59,50 @@ export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	const refreshStatus = async (updatedBoard: Board) => {
-		const fen = FenEncoder(updatedBoard);
-		const { moves: legalMoves, checkSquare: cs } = await window.electronAPI.getGameState(fen);
-		setAllMoves(legalMoves);
-		const status = resolveGameStatus(legalMoves.length, cs !== null);
-		const result = resolveGameResult(status, updatedBoard.colorTurn);
-		setGameResult(result);
-		if (result !== null) setModalVisible(true);
-		setCheckSquare(cs);
-	};
-
 	const handleGetMoves = (index: number) => {
 		setMoves(allMoves.filter(pair => pair[0] === index).map(pair => pair[1]));
 	};
 
 	const handleSelect = (index: number) => {
-		const action = resolveClickAction(board.atPos(index).color, board.colorTurn, selectedSquare, index);
+		const action = resolveClickAction(board[index].color, colorTurn, selectedSquare, index);
 		if (action === "select" || action === "reselect") {
 			setSelectedSquare(index);
 			handleGetMoves(index);
 		} else {
 			setSelectedSquare(null);
-			setMoves([] as number[]);
+			setMoves([]);
 		}
 	};
 
 	const handleMove = (index: number) => {
-		setFutureMoves([]);
-
 		if (selectedSquare === null) return;
-
-		let enPassant = false;
-		if (
-			index === enPassantSquare &&
-			board.squares[selectedSquare].type == PieceType.PAWN &&
-			(selectedSquare == index + 9 ||
-				selectedSquare == index + 7 ||
-				selectedSquare == index - 7 ||
-				selectedSquare == index - 9)
-		)
-			enPassant = true;
-
-		const piece = board.atPos(selectedSquare);
-
-		// Snapshot before updating en passant so undo can restore the correct ep state
-		const snapshot = {
-			castlesBefore: board.castles,
-			enPassantBefore: board.enPassant,
-			fullTurnBefore: board.fullTurn,
-			halfTurnBefore: board.halfTurn,
-		};
-
-		if (piece.type === PieceType.PAWN && Math.abs(selectedSquare - index) === 16) {
-			const direction = piece.color === "w" ? -8 : 8;
-			const epIndex = selectedSquare + direction;
-			setEnPassantSqaure(epIndex);
-			board.enPassant = indexToAlgebraic(epIndex);
-		} else {
-			setEnPassantSqaure(null);
-			board.enPassant = "-";
-		}
-
-		const { attacked, movedPiece, moveType } = board.move(selectedSquare, index, enPassant);
+		const gs = gameRef.current.move(selectedSquare, index);
+		syncFromGame();
 		setSelectedSquare(null);
-		setMoves([] as number[]);
-
-		const lastMove: IHalfTurnMove = {
-			from: selectedSquare,
-			to: index,
-			piece: movedPiece,
-			type: moveType,
-			pieceTaken: attacked ?? null,
-			...snapshot,
-		};
-
-		setPastMoves([...pastMoves, lastMove]);
-
-		board.swapTurn();
-		const newBoard = new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn);
-		setBoard(newBoard);
-		refreshStatus(newBoard);
+		setMoves([]);
+		refreshStatus(gs.fen);
 	};
 
 	const handleNewGame = () => {
-		const startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-		setBoard(FenDecoder(startFen));
+		gameRef.current = new Game();
+		syncFromGame();
 		setSelectedSquare(null);
-		setEnPassantSqaure(null);
 		setMoves([]);
-		setPastMoves([]);
-		setFutureMoves([]);
-		setGameResult(null);
+		setAllMoves([]);
 		setCheckSquare(null);
+		setGameResult(null);
 		setModalVisible(false);
 		setResignConfirmVisible(false);
+		window.electronAPI.getGameState(gameRef.current.state.fen).then(({ moves: legalMoves, checkSquare: cs }) => {
+			setAllMoves(legalMoves);
+			setCheckSquare(cs);
+		});
 	};
 
 	const handleResignClick = () => setResignConfirmVisible(true);
 
 	const handleResignConfirm = () => {
-		const opponent = board.colorTurn === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+		const opponent = colorTurn === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
 		setGameResult({ reason: "resign", winner: opponent });
 		setModalVisible(true);
 		setResignConfirmVisible(false);
@@ -153,49 +116,19 @@ export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
 	const movesToUndo = mode === GameMode.vsComputer ? 2 : 1;
 
 	const handleUndo = () => {
-		if (pastMoves.length < movesToUndo) return;
-
-		const newPastMoves = [...pastMoves];
-		const newFutureMoves = [...futureMoves];
-
-		for (let i = 0; i < movesToUndo; i++) {
-			const undoneMove = newPastMoves.pop()!;
-			board.undo(undoneMove);
-			newFutureMoves.push(undoneMove);
-		}
-
-		setPastMoves(newPastMoves);
-		setFutureMoves(newFutureMoves);
-		const newBoard = new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn);
-		setBoard(newBoard);
-		refreshStatus(newBoard);
+		const gs = gameRef.current.undo(mode);
+		syncFromGame();
+		setSelectedSquare(null);
+		setMoves([]);
+		refreshStatus(gs.fen);
 	};
 
 	const handleRedo = () => {
-		if (futureMoves.length === 0) return;
-
-		const move = futureMoves[futureMoves.length - 1];
-		setFutureMoves(futureMoves.slice(0, -1));
-
-		const isEnPassant = move.type === MoveType.ENPASSANT;
-		board.move(move.from, move.to, isEnPassant);
-
-		if (move.piece.type === PieceType.PAWN && Math.abs(move.from - move.to) === 16) {
-			const direction = move.piece.color === PieceColor.WHITE ? -8 : 8;
-			const epIndex = move.from + direction;
-			setEnPassantSqaure(epIndex);
-			board.enPassant = indexToAlgebraic(epIndex);
-		} else {
-			setEnPassantSqaure(null);
-			board.enPassant = "-";
-		}
-
-		setPastMoves([...pastMoves, move]);
-
-		board.swapTurn();
-		const newBoard = new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn);
-		setBoard(newBoard);
-		refreshStatus(newBoard);
+		const gs = gameRef.current.redo();
+		syncFromGame();
+		setSelectedSquare(null);
+		setMoves([]);
+		refreshStatus(gs.fen);
 	};
 
 	return (
@@ -209,16 +142,16 @@ export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
 			)}
 			{resignConfirmVisible && (
 				<ResignConfirmModal
-					colorTurn={board.colorTurn}
+					colorTurn={colorTurn}
 					onConfirm={handleResignConfirm}
 					onCancel={() => setResignConfirmVisible(false)}
 				/>
 			)}
 			<ChessBoard
-				board={board.squares}
+				board={board}
 				highlight={selectedSquare}
 				moves={moves}
-				colorTurn={board.colorTurn}
+				colorTurn={colorTurn}
 				checkSquare={checkSquare}
 				locked={gameResult !== null}
 				handleSelect={handleSelect}
