@@ -31,6 +31,9 @@ skills-lock.json
 
 # Build artifacts
 build/Release/
+build/*.vcxproj
+build/*.vcxproj.filters
+build/config.gypi
 
 # Claude Code local settings
 .claude/settings.local.json
