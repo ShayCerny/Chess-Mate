@@ -178,7 +178,7 @@ export const GameManager = ({ mode, difficulty, playerColor, onReturnToMenu }: I
 								</button>
 								<button className="control-btn redo" onClick={handleRedo} disabled={futureMoves.length === 0}>Redo</button>
 							</div>
-							<button className="control-btn main-menu" onClick={onReturnToMenu}>Main Menu</button>
+							<button className="control-btn" onClick={onReturnToMenu}>Main Menu</button>
 						</div>
 						<hr />
 						<div className="group">
