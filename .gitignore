@@ -35,6 +35,9 @@ build/*.vcxproj
 build/*.vcxproj.filters
 build/config.gypi
 
+# C++ test build directory
+tests/build/
+
 # Claude Code local settings
 .claude/settings.local.json
 

@@ -32,6 +32,7 @@ struct BoardState {
 BoardState parseFen(const std::string& fen);
 std::vector<Move> getLegalMoves(const BoardState& state);
 bool isInCheck(const BoardState& state, Color color);
+BoardState applyMove(const BoardState& state, const Move& move);
 
 // difficulty: 0 = Easy (depth 2), 1 = Medium (depth 3), 2 = Hard (depth 4)
 // Returns {-1, -1} when the position has no legal moves.

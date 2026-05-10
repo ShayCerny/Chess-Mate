@@ -152,7 +152,7 @@ bool isInCheck(const BoardState& state, Color color) {
     return isAttacked(state, k, enemy);
 }
 
-static BoardState applyMove(const BoardState& state, const Move& m) {
+BoardState applyMove(const BoardState& state, const Move& m) {
     BoardState next = state;
     Square moving = next.squares[m.from];
 
