@@ -19,11 +19,6 @@ export interface IPiece {
 	color: PieceColor;
 }
 
-export interface IFullTurnMove {
-	white: IHalfTurnMove;
-	black: IHalfTurnMove | null;
-}
-
 export enum MoveType {
 	NORMAL = 0,
 	ATTACK = 1,

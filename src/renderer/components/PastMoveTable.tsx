@@ -1,8 +1,8 @@
-import { IFullTurnMove, IHalfTurnMove, PieceColor, PieceType } from "../types";
+import { IHalfTurnMove, PieceColor, PieceType } from "../types";
 import Piece from "./Piece";
 
 interface IPastMoveTableProps {
-	pastMoves: IFullTurnMove[];
+	pastMoves: IHalfTurnMove[];
 }
 
 const files = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -38,6 +38,11 @@ export const PastMoveTable = ({ pastMoves }: IPastMoveTableProps) => {
 		return <p>{`${symbol} ${isCapture ? "x" : ""}${spaceCode}`}</p>;
 	}
 
+	const pairs: [IHalfTurnMove, IHalfTurnMove | null][] = [];
+	for (let i = 0; i < pastMoves.length; i += 2) {
+		pairs.push([pastMoves[i], pastMoves[i + 1] ?? null]);
+	}
+
 	return (
 		<table id="move-tree">
 			<thead>
@@ -51,10 +56,10 @@ export const PastMoveTable = ({ pastMoves }: IPastMoveTableProps) => {
 				</tr>
 			</thead>
 			<tbody>
-				{pastMoves.map((item, index) => (
+				{pairs.map(([white, black], index) => (
 					<tr key={index}>
-						<td>{getNotation(item.white)}</td>
-						<td>{item.black && getNotation(item.black)}</td>
+						<td>{getNotation(white)}</td>
+						<td>{black && getNotation(black)}</td>
 					</tr>
 				))}
 			</tbody>

@@ -7,20 +7,20 @@ import { useState, useEffect } from "react";
 import { Board } from "./BoardClass";
 import { FenDecoder, FenEncoder, indexToAlgebraic, resolveClickAction, resolveGameResult, resolveGameStatus } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
-import { GameConfig, GameResult, IFullTurnMove, IHalfTurnMove, MoveType, PieceColor, PieceType } from "../types";
+import { GameConfig, GameMode, GameResult, IHalfTurnMove, MoveType, PieceColor, PieceType } from "../types";
 
 type IGameProps = GameConfig & { onReturnToMenu: () => void };
 
 const standardFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-export const GameManager = ({ onReturnToMenu }: IGameProps) => {
+export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
 	const [board, setBoard] = useState(() => FenDecoder(standardFen));
 	const [selectedSquare, setSelectedSquare] = useState(null as null | number);
 	const [enPassantSquare, setEnPassantSqaure] = useState(null as null | number);
 
 	const [moves, setMoves] = useState([] as number[]);
 	const [allMoves, setAllMoves] = useState<number[][]>([]);
-	const [pastMoves, setPastMoves] = useState([] as IFullTurnMove[]);
+	const [pastMoves, setPastMoves] = useState([] as IHalfTurnMove[]);
 	const [futureMoves, setFutureMoves] = useState([] as IHalfTurnMove[]);
 	const [checkSquare, setCheckSquare] = useState<number | null>(null);
 	const [gameResult, setGameResult] = useState<GameResult | null>(null);
@@ -114,13 +114,7 @@ export const GameManager = ({ onReturnToMenu }: IGameProps) => {
 			...snapshot,
 		};
 
-		const tempPastMoves = [...pastMoves];
-		if (board.colorTurn === PieceColor.WHITE) {
-			tempPastMoves.push({ white: lastMove, black: null });
-		} else {
-			tempPastMoves[tempPastMoves.length - 1].black = lastMove;
-		}
-		setPastMoves(tempPastMoves);
+		setPastMoves([...pastMoves, lastMove]);
 
 		board.swapTurn();
 		const newBoard = new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn);
@@ -156,23 +150,22 @@ export const GameManager = ({ onReturnToMenu }: IGameProps) => {
 		setModalVisible(true);
 	};
 
-	const handleUndo = () => {
-		if (pastMoves.length === 0) return;
+	const movesToUndo = mode === GameMode.vsComputer ? 2 : 1;
 
-		const last = pastMoves[pastMoves.length - 1];
-		let undoneMove: IHalfTurnMove;
-		if (last.black !== null) {
-			undoneMove = last.black;
-			board.undo(last.black);
-			const tempPastMoves = [...pastMoves];
-			tempPastMoves[tempPastMoves.length - 1] = { ...last, black: null };
-			setPastMoves(tempPastMoves);
-		} else {
-			undoneMove = last.white;
-			board.undo(last.white);
-			setPastMoves(pastMoves.slice(0, -1));
+	const handleUndo = () => {
+		if (pastMoves.length < movesToUndo) return;
+
+		const newPastMoves = [...pastMoves];
+		const newFutureMoves = [...futureMoves];
+
+		for (let i = 0; i < movesToUndo; i++) {
+			const undoneMove = newPastMoves.pop()!;
+			board.undo(undoneMove);
+			newFutureMoves.push(undoneMove);
 		}
-		setFutureMoves([...futureMoves, undoneMove]);
+
+		setPastMoves(newPastMoves);
+		setFutureMoves(newFutureMoves);
 		const newBoard = new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn);
 		setBoard(newBoard);
 		refreshStatus(newBoard);
@@ -197,13 +190,7 @@ export const GameManager = ({ onReturnToMenu }: IGameProps) => {
 			board.enPassant = "-";
 		}
 
-		const tempPastMoves = [...pastMoves];
-		if (board.colorTurn === PieceColor.WHITE) {
-			tempPastMoves.push({ white: move, black: null });
-		} else {
-			tempPastMoves[tempPastMoves.length - 1].black = move;
-		}
-		setPastMoves(tempPastMoves);
+		setPastMoves([...pastMoves, move]);
 
 		board.swapTurn();
 		const newBoard = new Board([...board.squares], board.colorTurn, board.castles, board.enPassant, board.fullTurn, board.halfTurn);
@@ -248,7 +235,7 @@ export const GameManager = ({ onReturnToMenu }: IGameProps) => {
 							<h3 className="group-title">Game Controls</h3>
 							<button className="control-btn export">Export FEN</button>
 							<div className="row">
-								<button className="control-btn undo" onClick={handleUndo} disabled={pastMoves.length === 0}>
+								<button className="control-btn undo" onClick={handleUndo} disabled={pastMoves.length < movesToUndo}>
 									Undo
 								</button>
 								<button className="control-btn redo" onClick={handleRedo} disabled={futureMoves.length === 0}>Redo</button>
