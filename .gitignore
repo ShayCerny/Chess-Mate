@@ -17,11 +17,11 @@ dist-electron
 # Planning & generated docs
 prd.md
 plan.md
+ARCH_CANDIDATES.md
 docs/adr/
+docs/agents/
 docs/issues/
 .agents/
-.agents/once.ps1
-.agents/prompt.md
 CLAUDE.md
 skills-lock.json
 
