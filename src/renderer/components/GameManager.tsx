@@ -3,7 +3,7 @@ import { GameEndModal } from "./GameEndModal";
 import { ResignConfirmModal } from "./ResignConfirmModal";
 
 import "../styles/chess.scss";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Board } from "./BoardClass";
 import { FenDecoder, FenEncoder, indexToAlgebraic, resolveClickAction, resolveGameResult, resolveGameStatus } from "./utils";
 import { PastMoveTable } from "./PastMoveTable";
@@ -19,9 +19,10 @@ export const GameManager = ({ mode, onReturnToMenu }: IGameProps) => {
 	const [enPassantSquare, setEnPassantSqaure] = useState(null as null | number);
 
 	const [moves, setMoves] = useState([] as number[]);
+	const [allMoves, setAllMoves] = useState<number[][]>([]);
 	const [pastMoves, setPastMoves] = useState([] as IHalfTurnMove[]);
 	const [futureMoves, setFutureMoves] = useState([] as IHalfTurnMove[]);
-const [checkSquare, setCheckSquare] = useState<number | null>(null);
+	const [checkSquare, setCheckSquare] = useState<number | null>(null);
 	const [gameResult, setGameResult] = useState<GameResult | null>(null);
 	const [modalVisible, setModalVisible] = useState(false);
 	const [resignConfirmVisible, setResignConfirmVisible] = useState(false);
@@ -29,29 +30,27 @@ const [checkSquare, setCheckSquare] = useState<number | null>(null);
 	const whiteAdvantage = 0.5; // when a move is done it should calculate a new position evaluation and return whiteAdvantage
 	const height = `${whiteAdvantage * 100}%`;
 
+	useEffect(() => {
+		const fen = FenEncoder(board);
+		window.electronAPI.getGameState(fen).then(({ moves: legalMoves, checkSquare: cs }) => {
+			setAllMoves(legalMoves);
+			setCheckSquare(cs);
+		});
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
 	const refreshStatus = async (updatedBoard: Board) => {
 		const fen = FenEncoder(updatedBoard);
-		const [allMoves, inCheck] = await Promise.all([
-			window.electronAPI.getLegalMoves(fen),
-			window.electronAPI.isInCheck(fen),
-		]);
-		const status = resolveGameStatus(allMoves.length, inCheck);
+		const { moves: legalMoves, checkSquare: cs } = await window.electronAPI.getGameState(fen);
+		setAllMoves(legalMoves);
+		const status = resolveGameStatus(legalMoves.length, cs !== null);
 		const result = resolveGameResult(status, updatedBoard.colorTurn);
 		setGameResult(result);
 		if (result !== null) setModalVisible(true);
-		if (status === "check" || status === "checkmate") {
-			const kingIdx = updatedBoard.squares.findIndex(
-				s => s.type === PieceType.KING && s.color === updatedBoard.colorTurn
-			);
-			setCheckSquare(kingIdx >= 0 ? kingIdx : null);
-		} else {
-			setCheckSquare(null);
-		}
+		setCheckSquare(cs);
 	};
 
-	const handleGetMoves = async (index: number) => {
-		const fen = FenEncoder(board);
-		const allMoves: number[][] = await window.electronAPI.getLegalMoves(fen);
+	const handleGetMoves = (index: number) => {
 		setMoves(allMoves.filter(pair => pair[0] === index).map(pair => pair[1]));
 	};
 
